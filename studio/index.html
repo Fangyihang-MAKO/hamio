@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#f5f8f2">
+  <meta name="description" content="Ha!mio 角色创作间：先选喜欢的 Q 版形象，再设计她的不同姿态。当前为界面体验版，图片生成接口待接入。">
+  <title>角色创作间 · Ha!mio</title>
+  <link rel="icon" href="../favicon.ico">
+  <link rel="stylesheet" href="studio.css">
+  <script type="module" src="studio.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#workspace">跳到创作区域</a>
+  <header class="header page-width">
+    <a class="brand" href="../"><img src="../assets/idle.png" width="46" height="46" alt=""><span>Ha!mio <small>角色创作间</small></span></a>
+    <nav aria-label="页面导航"><a href="../">返回下载页 <span aria-hidden="true">↗</span></a></nav>
+  </header>
+  <main class="page-width">
+    <section class="intro" aria-labelledby="page-title">
+      <div><p class="eyebrow"><span class="little-star" aria-hidden="true">✦</span> 一点想象，一位新朋友</p><h1 id="page-title">让喜欢的角色，<span>变成小小的陪伴</span></h1><p class="intro-text">先找到心动的 Q 版形象，再慢慢收集她的每一个小表情</p></div>
+      <div class="mode-tag"><span class="status-dot" aria-hidden="true"></span><span>界面体验版<small id="api-label">图片生成接口待接入</small></span></div>
+    </section>
+    <div class="steps" aria-label="创作步骤">
+      <button class="step is-current" id="step-one" aria-current="step"><span class="step-number">01</span><span>找到她的模样<small>参考图片 → 多张 Q 版候选</small></span></button>
+      <span class="step-line" aria-hidden="true"></span>
+      <button class="step" id="step-two" disabled><span class="step-number">02</span><span>让她多一点生动<small>选择姿态 → 逐张调整</small></span><span class="step-lock" id="step-lock">先确认形象</span></button>
+    </div>
+
+    <section class="workspace" id="workspace" aria-label="角色创作工作台">
+      <div id="chibi-panel" class="workspace-layout">
+        <aside class="control-panel">
+          <div class="panel-heading"><span class="section-index">01</span><h2>你的角色灵感</h2></div>
+          <div class="form-section"><label class="field-label" for="reference-input">参考图片 <span>1–4 张</span></label>
+            <label class="upload-zone" id="upload-zone" for="reference-input"><span class="upload-icon" aria-hidden="true">＋</span><strong>点击上传，或拖到这里</strong><span>PNG / JPG / WebP · 每张 ≤ 10 MB</span><input id="reference-input" type="file" accept="image/png,image/jpeg,image/webp" multiple></label>
+            <div id="reference-list" class="reference-list" aria-label="已上传的参考图"></div>
+            <p class="field-note">当前图片仅在此页面内处理，刷新后不会保留</p>
+          </div>
+          <div class="form-section"><label class="field-label" for="description">想保留的特点 <span>可选</span></label><textarea id="description" maxlength="600" rows="3" placeholder="例如：银色长发、薄荷色裙摆，温柔又有一点害羞……"></textarea></div>
+          <fieldset class="form-section"><legend class="field-label">喜欢的画风</legend><div class="style-options"><label><input type="radio" name="style" value="soft" checked><span><i aria-hidden="true">✿</i>软萌插画</span></label><label><input type="radio" name="style" value="sticker"><span><i aria-hidden="true">✧</i>清爽贴纸</span></label><label><input type="radio" name="style" value="reference"><span><i aria-hidden="true">♡</i>跟随原图</span></label></div></fieldset>
+          <fieldset class="form-section"><legend class="field-label">一次想看几张？</legend><div class="count-options"><label><input type="radio" name="count" value="2"><span>2 张</span></label><label><input type="radio" name="count" value="4" checked><span>4 张</span></label><label><input type="radio" name="count" value="6"><span>6 张</span></label></div></fieldset>
+          <button class="button primary full-width" id="generate-chibi" disabled><span aria-hidden="true">✧</span> 生成 Q 版候选</button>
+          <p class="button-note">接口待接入，暂时不会生成图片</p>
+          <button class="button text-button full-width" id="use-reference" disabled>使用参考原图体验下一步 →</button>
+        </aside>
+        <div class="result-panel">
+          <div class="result-heading"><div><p class="eyebrow">CHIBI COLLECTION</p><h2>选中让你心动的那一张</h2></div><span class="small-pill" id="candidate-count">等你的灵感</span></div>
+          <div class="notice" id="chibi-notice" role="status" hidden></div>
+          <div id="candidate-empty" class="empty-state"><div class="sample-portrait"><span class="orbit" aria-hidden="true"></span><span class="spark spark-one" aria-hidden="true">✦</span><span class="spark spark-two" aria-hidden="true">✧</span><img src="../assets/idle.png" width="1254" height="1254" alt="已有的流萤示例形象"><span class="example-ribbon">已有素材示例</span></div><h3>从一张喜欢的图片开始</h3><p>还没准备好素材？用已有流萤图片<br>体验选形象、选姿态和逐张重做的流程</p><button class="button secondary" id="load-examples">用流萤示例体验 <span aria-hidden="true">↗</span></button><span class="empty-note">示例是现有素材，不是 AI 新生成的结果</span></div>
+          <div class="candidate-grid" id="candidate-grid" aria-label="Q 版候选图片" hidden></div>
+          <div class="result-footer"><p id="selection-note">选好一个形象，再进入姿态设计</p><button class="button primary" id="confirm-character" disabled>确认形象，下一步 <span aria-hidden="true">→</span></button></div>
+        </div>
+      </div>
+
+      <div id="pose-panel" class="workspace-layout" hidden>
+        <aside class="control-panel">
+          <div class="panel-heading"><span class="section-index">02</span><h2>收集她的小姿态</h2></div>
+          <div class="chosen-character"><img id="base-preview" alt="已确认的角色形象"><div><strong id="base-name">已确认形象</strong><span id="base-source"></span><button class="text-link" id="change-character">更换形象 ↗</button><button class="text-link base-download" id="download-base">下载图片 ↓</button></div></div>
+          <fieldset class="form-section"><legend class="field-label">想看看哪些姿态？<span>可多选</span></legend><div class="pose-options" id="pose-options"></div></fieldset>
+          <div class="form-section custom-pose"><label class="field-label" for="custom-pose-name">加一个特别的姿态 <span>可选</span></label><input id="custom-pose-name" maxlength="18" placeholder="例如：捧着一杯热可可"><label class="sr-only" for="custom-pose-description">姿态细节</label><textarea id="custom-pose-description" maxlength="180" rows="2" placeholder="补充动作、表情等细节"></textarea><button class="button subtle full-width" id="add-pose">＋ 添加自定义姿态</button></div>
+          <button class="button primary full-width" id="generate-poses">生成所选姿态 <span aria-hidden="true">✧</span></button><p class="button-note">接口待接入，暂时不会生成图片</p><button class="button text-button full-width" id="load-pose-examples" hidden>查看对应的已有示例姿态</button>
+        </aside>
+        <div class="result-panel">
+          <div class="result-heading"><div><p class="eyebrow">LITTLE MOMENTS</p><h2>每一种心情，都慢慢打磨</h2></div><span class="small-pill" id="pose-count">0 个姿态</span></div>
+          <div class="notice" id="pose-notice" role="status" hidden></div>
+          <div id="pose-empty" class="pose-empty"><span aria-hidden="true">✧</span><h3>开心、害羞，还是悄悄探头？</h3><p>在左侧选择一个或多个姿态<br>接入图片接口后，结果会出现在这里</p></div>
+          <div class="pose-grid" id="pose-grid" aria-label="姿态图片" hidden></div>
+          <div class="batch-bar" id="batch-bar" hidden><div><strong id="redo-count">已选 0 个姿态</strong><span>重做只影响勾选项，已有图片会保留</span></div><button class="button secondary" id="redo-selected" disabled>重做选中姿态 <span aria-hidden="true">↻</span></button></div>
+          <div class="result-footer"><p>这一步只设计角色图片，不会生成桌宠安装包</p><button class="button subtle" id="export-project">保存设计 JSON <span aria-hidden="true">↓</span></button></div>
+        </div>
+      </div>
+    </section>
+    <aside class="bottom-note"><span aria-hidden="true">✦</span><p>先把她的模样想好，接下来再让她动起来<span>当前可体验上传、选择与姿态管理；图片生成接口将在后续接入</span></p></aside>
+  </main>
+  <footer class="page-width footer"><a href="../">Ha!mio</a><span>小小一只，慢慢创造</span><button class="text-link" id="reset-project">重新开始</button></footer>
+  <noscript><p class="noscript">请开启浏览器 JavaScript，才能使用图片上传和角色设计功能</p></noscript>
+</body>
+</html>
