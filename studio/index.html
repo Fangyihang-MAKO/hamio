@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#f5f8f2">
-  <meta name="description" content="Ha!mio 角色创作间：先选喜欢的 Q 版形象，再设计她的不同姿态。当前为界面体验版，图片生成接口待接入。">
+  <meta name="description" content="Ha!mio 角色创作间：选择 Q 版形象、设计姿态，再写下专属人设。当前为界面体验版，AI 接口待接入。">
   <title>角色创作间 · Ha!mio</title>
   <link rel="icon" href="../favicon.ico">
   <link rel="stylesheet" href="studio.css">
@@ -18,13 +18,15 @@
   </header>
   <main class="page-width">
     <section class="intro" aria-labelledby="page-title">
-      <div><p class="eyebrow"><span class="little-star" aria-hidden="true">✦</span> 一点想象，一位新朋友</p><h1 id="page-title">让喜欢的角色，<span>变成小小的陪伴</span></h1><p class="intro-text">先找到心动的 Q 版形象，再慢慢收集她的每一个小表情</p></div>
+      <div><p class="eyebrow"><span class="little-star" aria-hidden="true">✦</span> 一点想象，一位新朋友</p><h1 id="page-title">让喜欢的角色，<span>变成小小的陪伴</span></h1><p class="intro-text">从模样、姿态到性格，慢慢写下你想认识的她</p></div>
       <div class="mode-tag"><span class="status-dot" aria-hidden="true"></span><span>界面体验版<small id="api-label">图片生成接口待接入</small></span></div>
     </section>
     <div class="steps" aria-label="创作步骤">
       <button class="step is-current" id="step-one" aria-current="step"><span class="step-number">01</span><span>找到她的模样<small>参考图片 → 多张 Q 版候选</small></span></button>
       <span class="step-line" aria-hidden="true"></span>
       <button class="step" id="step-two" disabled><span class="step-number">02</span><span>让她多一点生动<small>选择姿态 → 逐张调整</small></span><span class="step-lock" id="step-lock">先确认形象</span></button>
+      <span class="step-line" aria-hidden="true"></span>
+      <button class="step" id="step-three" disabled><span class="step-number">03</span><span>写下她的性格<small>描述人设 → 整理提示词</small></span><span class="step-lock" id="persona-step-lock">先确认形象</span></button>
     </div>
 
     <section class="workspace" id="workspace" aria-label="角色创作工作台">
@@ -66,11 +68,60 @@
           <div id="pose-empty" class="pose-empty"><span aria-hidden="true">✧</span><h3>开心、害羞，还是悄悄探头？</h3><p>在左侧选择一个或多个姿态<br>接入图片接口后，结果会出现在这里</p></div>
           <div class="pose-grid" id="pose-grid" aria-label="姿态图片" hidden></div>
           <div class="batch-bar" id="batch-bar" hidden><div><strong id="redo-count">已选 0 个姿态</strong><span>重做只影响勾选项，已有图片会保留</span></div><button class="button secondary" id="redo-selected" disabled>重做选中姿态 <span aria-hidden="true">↻</span></button></div>
-          <div class="result-footer"><p>这一步只设计角色图片，不会生成桌宠安装包</p><button class="button subtle" id="export-project">保存设计 JSON <span aria-hidden="true">↓</span></button></div>
+          <div class="result-footer pose-footer"><p>姿态可以以后补充，先给她一个独特的性格</p><div class="footer-actions"><button class="button subtle" id="export-project">保存设计 JSON <span aria-hidden="true">↓</span></button><button class="button primary" id="continue-persona">下一步，设计人设 <span aria-hidden="true">→</span></button></div></div>
+        </div>
+      </div>
+
+      <div id="persona-panel" class="workspace-layout persona-layout" hidden>
+        <aside class="control-panel persona-controls">
+          <div class="panel-heading"><span class="section-index">03</span><h2>她会是怎样的人？</h2></div>
+          <button class="text-link persona-back" id="persona-back">← 返回姿态设计</button>
+          <div class="form-section">
+            <label class="field-label" for="persona-name">角色名字</label>
+            <input type="text" id="persona-name" maxlength="40" placeholder="给她一个喜欢的名字">
+          </div>
+          <div class="form-section">
+            <label class="field-label" for="persona-brief">用你自己的话描述她 <span>创作起点</span></label>
+            <textarea id="persona-brief" maxlength="3000" rows="5" placeholder="例如：她是个温柔、有点害羞的老朋友。想陪我聊天，却怕打扰到我。说话用短句，会轻轻问一句‘今天过得怎么样呀？’……"></textarea>
+            <p class="field-note">你写下的内容会整理进右侧提示词，细节可以继续补充</p>
+            <div class="persona-brief-actions"><button class="button secondary" id="persona-ai-refine">让 AI 帮我细化 <span aria-hidden="true">✧</span></button><button class="text-link" id="persona-use-example">填入流萤人设示例</button></div>
+            <p class="field-note">AI 细化接口待接入，目前可手动编辑并导出提示词</p>
+          </div>
+          <div class="notice" id="persona-notice" role="status" hidden></div>
+          <details class="persona-group" open>
+            <summary><span>认识她</span><small>身份、性格与关系</small></summary>
+            <div class="persona-group-body">
+              <div class="form-section"><label class="field-label" for="persona-identity">她的身份</label><textarea id="persona-identity" maxlength="500" rows="2" placeholder="她是谁？来自哪里？现在在做什么？"></textarea></div>
+              <div class="form-section"><label class="field-label" for="persona-personality">性格与小习惯</label><textarea id="persona-personality" maxlength="800" rows="3" placeholder="例如：体贴、慢热，熟悉后会偷偷撒娇；担心打扰别人，但也有自己的喜好"></textarea></div>
+              <div class="form-section"><label class="field-label" for="persona-relationship">你们的关系</label><textarea id="persona-relationship" maxlength="700" rows="3" placeholder="是初次见面、老朋友，还是彼此有好感？有哪些共同回忆？"></textarea></div>
+            </div>
+          </details>
+          <details class="persona-group" open>
+            <summary><span>听她说话</span><small>语气与对话示例</small></summary>
+            <div class="persona-group-body">
+              <div class="form-section"><label class="field-label" for="persona-speech">说话方式</label><textarea id="persona-speech" maxlength="1000" rows="3" placeholder="句子长短、常用称呼、语气词、标点，以及不喜欢的表达方式"></textarea></div>
+              <div class="form-section"><label class="field-label" for="persona-greeting">第一句招呼</label><textarea id="persona-greeting" maxlength="300" rows="2" placeholder="例如：你回来啦……今天，有什么想告诉我的吗？"></textarea></div>
+              <div class="form-section"><label class="field-label" for="persona-examples">几句对话示例 <span>可选</span></label><textarea id="persona-examples" maxlength="1500" rows="4" placeholder="我：今天有点累&#10;她：那……先休息一小会儿，好不好呀？"></textarea></div>
+            </div>
+          </details>
+          <details class="persona-group">
+            <summary><span>补充她的故事</span><small>经历与相处边界</small></summary>
+            <div class="persona-group-body">
+              <div class="form-section"><label class="field-label" for="persona-background">经历、回忆与人物关系 <span>可选</span></label><textarea id="persona-background" maxlength="1500" rows="5" placeholder="重要经历、熟悉的人、珍惜的回忆，以及你想沿用的世界观设定"></textarea></div>
+              <div class="form-section"><label class="field-label" for="persona-boundaries">相处时需要注意什么？ <span>可选</span></label><textarea id="persona-boundaries" maxlength="800" rows="3" placeholder="例如：保持纯情，不催促我回复；不要编造共同经历，聊天时不用旁白解说"></textarea></div>
+            </div>
+          </details>
+        </aside>
+        <div class="result-panel persona-result">
+          <div class="result-heading"><div><p class="eyebrow">A LITTLE PERSONALITY</p><h2>让每一句话，都更像她</h2></div><span class="small-pill">本地整理</span></div>
+          <div class="persona-character"><div class="persona-avatar-wrap"><img id="persona-avatar" alt="正在设计人设的角色"></div><div><span class="persona-character-caption">正在认识</span><strong id="persona-character-name">你的角色</strong><span id="persona-source"></span></div><span class="persona-character-spark" aria-hidden="true">✦</span></div>
+          <section class="persona-preview-section" aria-labelledby="dialogue-preview-title"><div class="persona-section-heading"><h3 id="dialogue-preview-title">听听你写的她</h3><span>手写内容预览</span></div><div id="persona-dialogue" class="persona-dialogue"><p class="persona-preview-empty">写下一句招呼或对话示例，它们会出现在这里</p></div><p class="field-note">这里只展示你填写的台词，不是 AI 实时回复</p></section>
+          <section class="persona-prompt-section" aria-labelledby="prompt-preview-title"><div class="persona-section-heading"><h3 id="prompt-preview-title">她的人设提示词</h3><span id="prompt-count">0 字</span></div><label class="sr-only" for="prompt-preview">根据填写内容整理的人设提示词</label><textarea id="prompt-preview" readonly rows="18" placeholder="左侧的设定会整理为可复制的人设提示词"></textarea><p class="field-note">随填写内容更新，可供后续聊天功能使用；尚未连接 AI 对话</p><div class="persona-prompt-actions"><button class="button secondary" id="copy-prompt">复制提示词</button><button class="button subtle" id="download-prompt">下载 TXT <span aria-hidden="true">↓</span></button></div></section>
+          <div class="result-footer persona-footer"><p>把形象、姿态和人设一起保存，留住这次创作</p><button class="button primary" id="persona-export">保存完整设计 JSON <span aria-hidden="true">↓</span></button></div>
         </div>
       </div>
     </section>
-    <aside class="bottom-note"><span aria-hidden="true">✦</span><p>先把她的模样想好，接下来再让她动起来<span>当前可体验上传、选择与姿态管理；图片生成接口将在后续接入</span></p></aside>
+    <aside class="bottom-note"><span aria-hidden="true">✦</span><p>模样、姿态、性格，拼成独属于你的陪伴<span>当前可设计形象与人设并导出；AI 生成、聊天与桌宠打包将在后续接入</span></p></aside>
   </main>
   <footer class="page-width footer"><a href="../">Ha!mio</a><span>小小一只，慢慢创造</span><button class="text-link" id="reset-project">重新开始</button></footer>
   <noscript><p class="noscript">请开启浏览器 JavaScript，才能使用图片上传和角色设计功能</p></noscript>

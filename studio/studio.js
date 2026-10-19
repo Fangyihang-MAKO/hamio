@@ -1,4 +1,5 @@
 import { generateChibi, generatePoses, getGenerationStatus } from './api.js';
+import { PERSONA_FIELDS, createPersonaDraft, getFireflyPersonaExample, normalizePersonaDraft, compilePersonaPrompt, refinePersona } from './persona.js';
 
 const $ = (id) => document.getElementById(id);
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
@@ -22,7 +23,9 @@ const state = {
   definitions: DEFAULT_POSES.map((pose) => ({ ...pose })),
   chosenPoses: new Set(['happy', 'shy', 'peek']), redo: new Set(),
   revision: 0, uploadRevision: 0, busy: false, controller: null,
+  step: 1,
 };
+const persona = { draft: createPersonaDraft(), source: 'manual', revision: 0, busy: false, controller: null };
 
 function element(tag, className, text) {
   const node = document.createElement(tag);
@@ -53,6 +56,7 @@ function clearCharacter() {
   state.base = null;
   state.poses = [];
   state.redo.clear();
+  resetPersona();
   renderPoses();
   updateControls();
 }
@@ -67,21 +71,30 @@ function updateControls() {
   $('use-reference').disabled = !state.references.length || state.busy;
   $('confirm-character').disabled = !state.selectedId || state.busy;
   $('step-two').disabled = !state.base;
+  $('step-three').disabled = !state.base;
+  $('continue-persona').disabled = !state.base || state.busy;
+  $('persona-step-lock').hidden = Boolean(state.base);
   $('step-lock').hidden = Boolean(state.base);
   $('generate-poses').disabled = !state.base || !state.chosenPoses.size || state.busy;
   $('redo-selected').disabled = !state.redo.size || state.busy;
   $('load-pose-examples').disabled = !state.chosenPoses.size || state.busy;
 }
 function showStep(step, focus = false) {
+  if (step > 1 && !state.base) return;
+  state.step = step;
   $('chibi-panel').hidden = step !== 1;
   $('pose-panel').hidden = step !== 2;
+  $('persona-panel').hidden = step !== 3;
   $('step-one').classList.toggle('is-current', step === 1);
   $('step-two').classList.toggle('is-current', step === 2);
+  $('step-three').classList.toggle('is-current', step === 3);
   $('step-one').setAttribute('aria-current', step === 1 ? 'step' : 'false');
   $('step-two').setAttribute('aria-current', step === 2 ? 'step' : 'false');
+  $('step-three').setAttribute('aria-current', step === 3 ? 'step' : 'false');
+  if (step === 3) renderPersonaPreview();
   if (focus) {
     $('workspace').scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'start' });
-    (step === 1 ? $('reference-input') : $('generate-poses')).focus({ preventScroll: true });
+    (step === 1 ? $('reference-input') : step === 2 ? $('generate-poses') : $('persona-brief')).focus({ preventScroll: true });
   }
 }
 function renderReferences() {
@@ -337,16 +350,140 @@ function downloadUrl(url, filename) {
   const anchor = element('a'); anchor.href = url; anchor.download = filename; anchor.hidden = true;
   document.body.append(anchor); anchor.click(); anchor.remove();
 }
+
+function invalidatePersonaRequest() {
+  persona.revision += 1;
+  persona.controller?.abort();
+  persona.controller = null;
+  persona.busy = false;
+  $('persona-suggestion')?.remove();
+}
+function setPersonaDraft(draft, source = 'manual') {
+  invalidatePersonaRequest();
+  persona.draft = normalizePersonaDraft(draft);
+  persona.source = source;
+  $('persona-brief').value = persona.draft.brief;
+  for (const field of PERSONA_FIELDS) $('persona-' + field).value = persona.draft.fields[field];
+  renderPersonaPreview();
+}
+function resetPersona() {
+  setPersonaDraft(createPersonaDraft());
+  notice('persona', '');
+}
+function readPersonaInputs() {
+  return normalizePersonaDraft({
+    brief: $('persona-brief').value,
+    fields: Object.fromEntries(PERSONA_FIELDS.map((field) => [field, $('persona-' + field).value])),
+  });
+}
+function personaPreviewLines(draft) {
+  const rows = [];
+  if (draft.fields.greeting.trim()) rows.push({ label: draft.fields.name || '角色', text: draft.fields.greeting, user: false });
+  for (const line of draft.fields.examples.split('\n')) {
+    if (!line.trim()) continue;
+    const match = line.match(/^([^：:]{1,40})[：:]\s*(.*)$/u);
+    if (match) {
+      rows.push({ label: match[1], text: match[2], user: ['用户', '我', '你'].includes(match[1]) });
+    } else if (rows.length && rows.at(-1).example) {
+      rows.at(-1).text += '\n' + line;
+    } else {
+      rows.push({ label: '台词示例', text: line, user: false });
+    }
+    rows.at(-1).example = true;
+  }
+  return rows.slice(0, 5);
+}
+function renderPersonaPreview() {
+  const prompt = compilePersonaPrompt(persona.draft);
+  const name = persona.draft.fields.name || '还没起名的朋友';
+  const avatar = $('persona-avatar');
+  if (state.base) avatar.src = state.base.dataUrl;
+  else avatar.removeAttribute('src');
+  avatar.alt = '当前选中的角色形象';
+  $('persona-character-name').textContent = name;
+  $('persona-source').textContent = persona.source === 'demo' ? '流萤人设示例 · 可修改' : persona.source === 'generated' ? '已采纳 AI 人设草稿' : '手动设定 · 本地整理';
+  $('persona-use-example').hidden = state.base?.source !== 'demo';
+  $('prompt-preview').value = prompt;
+  $('prompt-count').textContent = `${prompt.length} 字`;
+  $('copy-prompt').disabled = !prompt;
+  $('download-prompt').disabled = !prompt;
+  $('persona-ai-refine').disabled = persona.busy || !prompt;
+  $('persona-ai-refine').textContent = persona.busy ? '正在完善人设…' : 'AI 帮我完善';
+  const preview = $('persona-dialogue');
+  preview.replaceChildren();
+  const lines = personaPreviewLines(persona.draft);
+  if (!lines.length) {
+    preview.append(element('p', 'persona-preview-empty', '写下开场白或台词示例，就能在这里看看说话的感觉'));
+  }
+  for (const line of lines) {
+    const bubble = element('div', `persona-dialogue-message${line.user ? ' is-user' : ''}`);
+    bubble.append(element('strong', 'persona-dialogue-label', line.label), element('p', '', line.text));
+    preview.append(bubble);
+  }
+}
+function editPersona() {
+  invalidatePersonaRequest();
+  persona.draft = readPersonaInputs();
+  persona.source = 'manual';
+  notice('persona', '');
+  renderPersonaPreview();
+}
+async function requestPersona() {
+  if (!state.base || persona.busy || !compilePersonaPrompt(persona.draft)) return;
+  invalidatePersonaRequest();
+  const revision = persona.revision;
+  const characterRevision = state.revision;
+  persona.busy = true;
+  const controller = new AbortController();
+  persona.controller = controller;
+  renderPersonaPreview();
+  try {
+    const result = await refinePersona({ draft: persona.draft, characterId: state.base.id }, { signal: controller.signal });
+    if (persona.revision !== revision || state.revision !== characterRevision) return;
+    const suggestion = element('div', 'persona-suggestion'); suggestion.id = 'persona-suggestion';
+    suggestion.append(element('h3', '', result.source === 'demo' ? '示例人设建议' : 'AI 人设建议'));
+    const preview = element('textarea'); preview.readOnly = true; preview.rows = 8;
+    preview.setAttribute('aria-label', '待采纳的人设提示词');
+    preview.value = compilePersonaPrompt(result.draft);
+    const actions = element('div', 'persona-actions');
+    const accept = element('button', 'button secondary', '采纳这版建议'); accept.type = 'button';
+    accept.addEventListener('click', () => { setPersonaDraft(result.draft, result.source); notice('persona', '已采纳人设建议，你还可以继续修改'); });
+    const dismiss = element('button', 'button subtle', '保留我的设定'); dismiss.type = 'button';
+    dismiss.addEventListener('click', () => { suggestion.remove(); notice('persona', '已保留你的设定'); });
+    actions.append(accept, dismiss); suggestion.append(preview, actions);
+    $('persona-notice').after(suggestion);
+    notice('persona', '先查看建议，再决定是否采纳。当前设定尚未改变');
+  } catch (error) {
+    if (persona.revision !== revision || state.revision !== characterRevision || error.name === 'AbortError') return;
+    notice('persona', error.code === 'PERSONA_NOT_CONFIGURED'
+      ? 'AI 人设接口尚未接入。你填写的内容已经在右侧整理成提示词，可以继续编辑、复制或保存；当前没有调用模型'
+      : '暂时无法获取人设建议，你填写的内容仍然保留', error.code !== 'PERSONA_NOT_CONFIGURED');
+  } finally {
+    if (persona.revision === revision) { persona.busy = false; persona.controller = null; renderPersonaPreview(); }
+  }
+}
+function downloadPrompt() {
+  const prompt = compilePersonaPrompt(persona.draft);
+  if (!prompt) return;
+  const url = URL.createObjectURL(new Blob([prompt], { type: 'text/plain;charset=utf-8' }));
+  downloadUrl(url, 'Ha-mio-角色人设提示词.txt');
+  window.setTimeout(() => URL.revokeObjectURL(url), 30000);
+  notice('persona', '人设提示词已下载，可在之后接入的聊天服务中使用');
+}
 async function exportProject() {
   if (!state.base) return;
   const button = $('export-project'); button.disabled = true;
+  $('persona-export').disabled = true;
   const revision = state.revision;
+  const panel = state.step === 3 ? 'persona' : 'pose';
+  const personaSnapshot = normalizePersonaDraft(persona.draft);
+  const personaSource = persona.source;
   try {
     const base = { ...state.base, dataUrl: await asDataUrl(state.base) };
     const poses = await Promise.all(state.poses.map(async (pose) => ({ ...pose, image: pose.image ? { ...pose.image, dataUrl: await asDataUrl(pose.image) } : null })));
     if (revision !== state.revision) return;
     const payload = {
-      schema: 'hamio-character-studio', schemaVersion: 1, edition: 'interface-preview',
+      schema: 'hamio-character-studio', schemaVersion: 2, edition: 'interface-preview',
       notice: '角色设计草稿，不是桌宠安装包；source=demo 为已有示例，source=reference 为未转换原图',
       createdAt: new Date().toISOString(), description: $('description').value.trim(),
       style: document.querySelector('input[name="style"]:checked').value,
@@ -354,13 +491,14 @@ async function exportProject() {
       references: state.references.map((reference) => ({ ...reference })), baseImage: base,
       poseDefinitions: state.definitions.map(({ id, name, description }) => ({ id, name, description })),
       selectedPoseIds: [...state.chosenPoses], poses,
+      persona: { ...personaSnapshot, source: personaSource, systemPrompt: compilePersonaPrompt(personaSnapshot) },
     };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json;charset=utf-8' });
     const url = URL.createObjectURL(blob); downloadUrl(url, 'Ha-mio-角色设计草稿.json');
     window.setTimeout(() => URL.revokeObjectURL(url), 30000);
-    notice('pose', '设计草稿已导出，包含当前图片和姿态设置；这是 JSON 文件，不是桌宠安装包');
-  } catch { notice('pose', '保存未完成，请稍后重试', true); }
-  finally { button.disabled = false; }
+    notice(panel, '设计草稿已导出，包含图片、姿态和人设；这是 JSON 文件，不是桌宠安装包');
+  } catch { notice(panel, '保存未完成，请稍后重试', true); }
+  finally { button.disabled = false; $('persona-export').disabled = false; }
 }
 
 $('reference-input').addEventListener('change', (event) => {
@@ -392,7 +530,10 @@ $('confirm-character').addEventListener('click', () => {
 });
 $('step-one').addEventListener('click', () => showStep(1));
 $('step-two').addEventListener('click', () => { if (state.base) showStep(2); });
-$('change-character').addEventListener('click', () => { showStep(1, true); notice('chibi', '再次确认同一张形象，会保留已有姿态。选择其他形象时会清空姿态，如需保留，请先在第二步保存设计 JSON'); });
+$('step-three').addEventListener('click', () => showStep(3));
+$('continue-persona').addEventListener('click', () => showStep(3, true));
+$('persona-back').addEventListener('click', () => showStep(2, true));
+$('change-character').addEventListener('click', () => { showStep(1, true); notice('chibi', '再次确认同一张形象，会保留已有姿态和人设。选择其他形象会清空这些设置，如需保留，请先保存设计 JSON'); });
 $('download-base').addEventListener('click', async () => {
   if (!state.base) return;
   const base = { ...state.base };
@@ -417,6 +558,26 @@ $('add-pose').addEventListener('click', () => {
   renderPoseOptions(); updateControls(); notice('pose', `已添加并选中“${name}”，接入图片接口后可生成`);
 });
 $('export-project').addEventListener('click', exportProject);
+$('persona-export').addEventListener('click', exportProject);
+$('persona-brief').addEventListener('input', editPersona);
+for (const field of PERSONA_FIELDS) $('persona-' + field).addEventListener('input', editPersona);
+$('persona-use-example').addEventListener('click', () => {
+  if (state.base?.source !== 'demo') return;
+  if (compilePersonaPrompt(persona.draft) && !window.confirm('载入示例会替换当前人设文字。要载入流萤示例吗？')) return;
+  setPersonaDraft(getFireflyPersonaExample(), 'demo');
+  notice('persona', '已载入预先写好的流萤人设示例，可以自由修改；没有调用 AI');
+});
+$('persona-ai-refine').addEventListener('click', requestPersona);
+$('download-prompt').addEventListener('click', downloadPrompt);
+$('copy-prompt').addEventListener('click', async () => {
+  const prompt = compilePersonaPrompt(persona.draft);
+  if (!prompt) return;
+  try { await navigator.clipboard.writeText(prompt); notice('persona', '人设提示词已复制'); }
+  catch {
+    $('prompt-preview').focus(); $('prompt-preview').select();
+    notice('persona', '浏览器未允许自动复制，已选中提示词，请手动复制或下载 TXT');
+  }
+});
 $('reset-project').addEventListener('click', () => {
   if ((state.references.length || state.candidates.length || state.base) && !window.confirm('重新开始会清空本页的图片和设计。确定继续吗？')) return;
   state.uploadRevision += 1; clearCharacter(); state.references = []; state.candidates = []; state.selectedId = null;
@@ -428,4 +589,5 @@ $('reset-project').addEventListener('click', () => {
 });
 const apiStatus = getGenerationStatus();
 $('api-label').textContent = apiStatus.label;
+renderPersonaPreview();
 renderReferences(); renderCandidates(); renderPoseOptions(); renderPoses();
