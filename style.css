@@ -11,3 +11,34 @@
 
 .motion-toggle{position:relative;z-index:2;background:transparent;border:0;color:#486c5e;text-decoration:underline;text-underline-offset:3px;font-size:.875rem;padding:10px 15px;min-height:40px;border-radius:12px}.motion-toggle:hover{background:#e8f1e5}.motion-toggle[hidden]{display:none}
 .studio-invite{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;margin-top:20px;font-size:.875rem;line-height:1.7}.studio-invite a{color:var(--green);text-decoration:underline;text-underline-offset:4px}.studio-invite>span{font-size:.72rem;background:#edf3e6;color:#557457;border:1px solid #dce7d2;border-radius:30px;padding:1px 8px}@media(max-width:400px){.site-header nav{gap:10px;font-size:.78rem}}
+
+/* Xuzhao is a separate Windows release; keep the Firefly page theme intact. */
+.xuzhao-jump{display:inline-block;margin-top:12px;font-size:.875rem;line-height:1.7;color:#665b9a;text-decoration:underline;text-underline-offset:4px}
+.xuzhao-jump span{display:inline-block;margin-left:5px}
+.xuzhao-release{position:relative;isolation:isolate;display:grid;grid-template-columns:.9fr 1.1fr;gap:30px;align-items:center;overflow:hidden;margin-bottom:68px;padding:44px 52px;border:1px solid #61648c;border-radius:28px;color:#f7f6ff;background:radial-gradient(ellipse at 15% 25%,#39496b 0%,transparent 60%),linear-gradient(125deg,#14243c,#2b2147);scroll-margin-top:24px}
+.xuzhao-release:before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background-image:radial-gradient(circle at 5% 12%,#fff9 0 1px,transparent 1.5px),radial-gradient(circle at 36% 10%,#fff8 0 1.2px,transparent 1.7px),radial-gradient(circle at 77% 8%,#fff9 0 1px,transparent 1.5px),radial-gradient(circle at 95% 29%,#fff8 0 1.5px,transparent 2px),radial-gradient(circle at 53% 84%,#fff8 0 1px,transparent 1.5px),radial-gradient(circle at 6% 72%,#fffa 0 1px,transparent 1.5px)}
+.xuzhao-release:after{content:"";position:absolute;right:0;bottom:0;width:50%;aspect-ratio:1;z-index:-1;pointer-events:none;clip-path:polygon(100% 0,100% 100%,0 100%);background-image:radial-gradient(circle,#080b18 2px,transparent 2.5px);background-size:20px 20px;opacity:.55}
+.xuzhao-stage{position:relative;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 0 0}
+.xuzhao-stage img{width:min(100%,340px);height:auto;filter:drop-shadow(0 14px 22px #0a10285c)}
+.xuzhao-stage-line{position:relative;z-index:1;margin-bottom:5px;padding:9px 20px;background:#f0edff;border:1px solid #d2caff;border-radius:14px;color:#34274f;font-size:.875rem;line-height:1.5}
+.xuzhao-star{position:absolute;color:#e6ddff;line-height:1;pointer-events:none}
+.xuzhao-star-one{top:24%;left:1%;font-size:33px}
+.xuzhao-star-two{top:11%;right:1%;font-size:25px}
+.xuzhao-copy{min-width:0;position:relative}
+.xuzhao-kicker{display:flex;flex-wrap:wrap;align-items:center;gap:10px;color:#c6caef;font-size:.8125rem;line-height:1.7;letter-spacing:.5px;margin-bottom:17px}
+.xuzhao-kicker span{padding:3px 10px;border:1px solid #8589ad80;border-radius:99px;background:#ffffff0a;color:#eeeaff;letter-spacing:0}
+.xuzhao-copy h2{font-size:clamp(1.8rem,3vw,2.5rem);line-height:1.4;letter-spacing:-.5px}
+.xuzhao-copy h2 span{color:#bcb8fb}
+.xuzhao-intro{margin-top:17px;font-size:.9375rem;line-height:1.9;color:#d0d1e4}
+.xuzhao-features{padding:0;margin:20px 0 24px;list-style:none;display:grid;gap:9px;color:#eeeaf9;font-size:.875rem;line-height:1.6}
+.xuzhao-features li{position:relative;padding-left:19px}
+.xuzhao-features li:before{content:"✦";position:absolute;left:0;top:0;color:#bbb8fd;font-size:12px}
+.xuzhao-download{max-width:340px;padding:13px 18px;background:#e5dfff;color:#282346;border:1px solid #f6f2ff;box-shadow:0 8px 20px #070c201c}
+.xuzhao-download:hover{background:#f1edff}
+.xuzhao-requirements{max-width:340px;text-align:center;color:#d0cde4;font-size:.75rem;line-height:1.8;margin-top:9px}
+.xuzhao-key-note{max-width:420px;color:#bebed5;font-size:.75rem;line-height:1.8;margin-top:13px}
+.xuzhao-download-status{font-size:.8125rem;color:#f4eaff;line-height:1.8;max-width:420px}
+.xuzhao-download-status:not(:empty){margin-top:10px}
+.xuzhao-release a:focus-visible{outline-color:#fff}
+@media(max-width:850px){.xuzhao-release{padding:30px 28px;gap:20px}.xuzhao-copy h2{font-size:1.85rem}.xuzhao-intro br{display:none}.xuzhao-stage img{max-width:300px}}
+@media(max-width:620px){.xuzhao-release{grid-template-columns:1fr;padding:26px 22px 29px;gap:22px;margin-bottom:36px;border-radius:22px}.xuzhao-stage{padding-top:0;max-width:270px;width:100%;margin-inline:auto}.xuzhao-stage img{width:235px}.xuzhao-stage-line{font-size:.8125rem;padding:7px 16px}.xuzhao-copy h2{font-size:1.9rem}.xuzhao-kicker{margin-bottom:13px;gap:7px;font-size:.75rem}.xuzhao-intro{margin-top:12px}.xuzhao-features{margin:16px 0 20px;gap:8px}.xuzhao-download,.xuzhao-requirements{max-width:none}.xuzhao-key-note{font-size:.75rem}.xuzhao-release:after{width:85%}}

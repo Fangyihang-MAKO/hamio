@@ -4,3 +4,4 @@ fd4f851c6a02bd2271ff93bc9a8f088a80708cf710b22d37a00e4a41134bb8c3  Ha-mio-Windows
 87f756abcfa09f2cb8336bef0df3d55312f366c14e8d38b6de4da3c7a02da0df  Ha-mio-Firefly-1.1.4.apk
 9931d22a21679cd4dca9873c4c3e4078664210fa4b1952229b0587d9bf69b994  Ha-mio-Firefly-Windows-1.1.4.exe
 4d3e01c8c8bf8f3ebbc2ffa525f4a9a885779cccab456eba5fc8042e18c168ac  Ha-mio-Firefly-Windows-1.1.4-portable.zip
+d678b884dffa8ca9c0798e663d78b10e15ac451d100ef806fa939fabacc06968  Ha-mio-Xuzhao-Windows-0.2.2.exe

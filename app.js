@@ -101,5 +101,6 @@ petButton.addEventListener('click', () => {
   }, 5000);
 });
 document.querySelectorAll('.download').forEach(link => link.addEventListener('click', () => {
-  document.getElementById('download-status').textContent = '已发起下载，请查看浏览器下载记录。微信内无法下载时，请在浏览器中打开';
+  const status = document.getElementById(link.dataset.downloadStatus || 'download-status');
+  if (status) status.textContent = '已发起下载，请查看浏览器下载记录。微信内无法下载时，请在浏览器中打开';
 }));

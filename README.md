@@ -20,7 +20,9 @@ Ha!mio 下载网站的静态文件，包含 Android 与 Windows 安装包、角�
 - `assets/`：页面图片
 - `downloads/`：安装包及 `SHA256SUMS.txt` 校验文件
 
-网站当前提供 Ha!mio 流萤正式版 1.1.4（Android APK 与 Windows EXE），与 Skill MVP 体验包分开。安装包内容与本地正式交付版一致，SHA-256 见 downloads/SHA256SUMS.txt。Windows 便携 ZIP 包含同一 EXE 和使用说明。
+网站当前提供 Ha!mio 流萤正式版 1.1.4（Android APK 与 Windows EXE），以及虚照 Windows 0.2.2，与 Skill MVP 体验包分开。安装包内容与本地正式交付版一致，SHA-256 见 downloads/SHA256SUMS.txt。流萤 Windows 便携 ZIP 包含同一 EXE 和使用说明。
+
+虚照入口位于首页 `#xuzhao`，仅支持 Windows 10 / 11 x64，依赖 .NET Framework 4.8。0.2.2 修复右键菜单显示，并保留右下角黑色渐变波点、拖动扑腾动作频率至原来的 1.2 倍，以及按人物轮廓贴近显示的气泡；包含 AI 聊天、摸头喂食和本地待办提醒。动作频率不表示显示器帧率提高。虚照与流萤使用独立的本地记录及设置，AI 聊天仍需用户自己的密钥。公开文件仅包括 EXE 及展示图，不发布源代码包。
 
 本仓库仅放置面向访客公开的网页资源，不包含开发源码、API 密钥、聊天记录或收款码。流萤角色来自《崩坏：星穹铁道》，相关角色与作品权利归原权利方所有；本项目为非官方同人作品。
 
