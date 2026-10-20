@@ -34,3 +34,49 @@
   .pose-version select, .pose-version .button { min-height:40px; font-size:11px; }
   .draft-bar small { font-size:10px; }
 }
+
+/* A quiet, actionable progress summary; missing details never block a backup. */
+.creation-progress { margin:0 0 24px; padding:20px 24px; border:1px solid #dce6d6; border-radius:18px; background:linear-gradient(115deg,#f0f6e8,#fffaf0); }
+.creation-progress-heading { display:flex; align-items:center; justify-content:space-between; gap:18px; }
+.creation-progress-heading h2 { font-size:15px; line-height:1.7; margin-top:6px; font-weight:600; }
+.creation-progress-heading .button { flex-shrink:0; min-height:40px; font-size:12px; }
+.creation-checkpoints { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:10px; margin-top:17px; }
+.creation-checkpoint { display:flex; align-items:flex-start; gap:9px; padding:12px; text-align:left; background:#ffffffad; border:1px solid #e0e8d8; border-radius:11px; min-width:0; }
+.creation-checkpoint:hover { border-color:#94af88; background:#fffefb; }
+.creation-checkpoint > span:last-child { min-width:0; }
+.creation-checkpoint strong { display:block; font-size:12px; font-weight:600; line-height:1.6; }
+.creation-checkpoint small { display:block; font-size:11px; line-height:1.7; color:#71816c; margin-top:3px; overflow-wrap:anywhere; }
+.check-symbol { display:grid; place-items:center; flex-shrink:0; width:21px; height:21px; margin-top:1px; border:1px solid #d5dfcd; border-radius:50%; color:#788b6e; font-size:11px; }
+[data-status="ready"] .check-symbol { color:#fff; background:#558c70; border-color:#558c70; }
+[data-status="pending"] .check-symbol { color:#8d6d37; background:#fbefd8; border-color:#e9d4ad; }
+.delivery-card { margin:26px 0 0; padding:22px; border:1px solid #dae5ce; border-radius:17px; background:linear-gradient(145deg,#f3f7ec,#fffbf1); }
+.delivery-heading { display:flex; align-items:center; justify-content:space-between; gap:16px; }
+.delivery-heading h3 { font-size:19px; line-height:1.6; font-weight:600; margin-top:7px; }
+.delivery-icon { display:grid; place-items:center; width:44px; height:44px; border-radius:13px; background:#e6efdc; color:#7f955d; font-size:25px; flex-shrink:0; }
+.delivery-intro { margin-top:11px; font-size:12px; line-height:1.9; color:#6f8069; }
+.delivery-checklist { list-style:none; padding:0; margin:17px 0; }
+.delivery-checklist li { display:flex; align-items:center; gap:10px; padding:12px 0; border-bottom:1px solid #e1e8d6; }
+.delivery-checklist li > div { flex:1; min-width:0; }
+.delivery-checklist strong { display:block; font-size:12px; line-height:1.7; }
+.delivery-checklist p { font-size:11px; line-height:1.8; color:#73846c; overflow-wrap:anywhere; }
+.delivery-checklist button { flex-shrink:0; min-height:36px; font-size:11px; padding:6px; }
+.bundle-contents { padding:14px 16px; margin:18px 0; background:#fffefa; border:1px dashed #cad9ba; border-radius:10px; }
+.bundle-contents strong { font-size:12px; }
+.bundle-contents p { margin:7px 0; font-size:12px; line-height:1.9; color:#60795b; }
+.bundle-contents small { display:block; font-size:11px; line-height:1.8; color:#7b8b72; }
+.bundle-note { font-size:11px; line-height:1.8; color:#79876e; text-align:center; margin-top:10px; }
+.bundle-status { margin-top:14px; font-size:12px; line-height:1.8; color:#3e7659; overflow-wrap:anywhere; }
+.bundle-status.error { color:#a9563e; }
+@media(max-width:760px) {
+  .creation-progress { padding:17px; }
+  .creation-checkpoints { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .creation-progress-heading h2 { font-size:14px; }
+  .delivery-card { padding:18px; }
+}
+@media(max-width:420px) {
+  .creation-progress-heading { align-items:flex-start; flex-direction:column; gap:10px; }
+  .creation-progress-heading .button { width:100%; }
+  .creation-checkpoint { padding:10px; gap:7px; }
+  .creation-checkpoint small { font-size:10px; }
+  .delivery-heading h3 { font-size:17px; }
+}

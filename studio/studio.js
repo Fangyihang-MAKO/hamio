@@ -3,6 +3,8 @@ import { PERSONA_FIELDS, createPersonaDraft, getFireflyPersonaExample, normalize
 import { createPetPreview } from './preview.js?v=workflow-1';
 import { parseProject, normalizeProject, normalizeDraft, PROJECT_MAX_BYTES } from './project.js?v=workflow-1';
 import { createDraftStore } from './drafts.js?v=workflow-1';
+import { assessCreationProject } from './review.js?v=delivery-1';
+import { buildCreationBundle } from './bundle.js?v=delivery-1';
 
 const $ = (id) => document.getElementById(id);
 function createId(cryptoApi = globalThis.crypto) {
@@ -113,6 +115,64 @@ function updateControls() {
   $('generate-poses').disabled = !state.base || !state.chosenPoses.size || state.busy;
   $('redo-selected').disabled = !state.redo.size || state.busy;
   $('load-pose-examples').disabled = !state.chosenPoses.size || state.busy;
+  $('export-bundle').disabled = !state.base || exporting;
+  renderCreationReview();
+}
+function creationReview() {
+  // Keep this cheap during typing; image data and history do not need cloning.
+  return assessCreationProject({
+    baseImage: state.base, selectedPoseIds: [...state.chosenPoses],
+    poseDefinitions: state.definitions, poses: state.poses, persona: persona.draft,
+  });
+}
+function goToCheck(check) {
+  if (check.step > 1 && !state.base) check = creationReview().checks[0];
+  showStep(check.step);
+  let target = check.target && $(check.target);
+  if (check.id === 'base') target = state.selectedId ? $('confirm-character') : state.candidates.length ? $('candidate-grid') : $('reference-input');
+  if (check.poseId) {
+    const card = [...$('pose-grid').querySelectorAll('.pose-card')]
+      .find(node => node.dataset.poseId === check.poseId);
+    target = card?.querySelector(check.status === 'pending' ? '.pose-edit-note' : '.pose-result-input') || card || target;
+  }
+  target ||= $('workspace');
+  for (let parent = target.parentElement; parent; parent = parent.parentElement) {
+    if (parent.tagName === 'DETAILS') parent.open = true;
+  }
+  if (!target.matches('input,textarea,button,select,a')) target.tabIndex = -1;
+  target.focus({ preventScroll: true });
+  (target.closest('.pose-card, .form-section') || target).scrollIntoView({
+    behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
+    block: 'center',
+  });
+}
+function renderCreationReview() {
+  const review = creationReview();
+  $('creation-next-hint').textContent = review.next
+    ? review.next.status === 'pending' ? '还有姿态想再调整，已有图片会继续保留' : `接下来：${review.next.label}`
+    : '设计已记录，去试玩或导出创作包';
+  $('review-next').textContent = !state.base ? '从这里开始 →' : review.next ? '继续完善 →' : '去试玩 →';
+  const checkpoints = $('creation-checkpoints');
+  const list = $('delivery-checklist');
+  checkpoints.replaceChildren(); list.replaceChildren();
+  for (const check of review.checks) {
+    const symbol = check.status === 'ready' ? '✓' : check.status === 'pending' ? '↻' : check.status === 'optional' ? '—' : '·';
+    const makeSymbol = () => { const node = element('span', 'check-symbol', symbol); node.setAttribute('aria-hidden', 'true'); return node; };
+    const button = element('button', 'creation-checkpoint'); button.type = 'button';
+    button.dataset.checkId = check.id; button.dataset.status = check.status;
+    const copy = element('span');
+    copy.append(element('strong', '', check.label), element('small', '', check.detail));
+    button.append(makeSymbol(), copy);
+    button.addEventListener('click', () => goToCheck(check));
+    checkpoints.append(button);
+    const row = element('li'); row.dataset.checkId = check.id; row.dataset.status = check.status;
+    const details = element('div');
+    details.append(element('strong', '', check.label), element('p', '', check.detail));
+    const action = element('button', 'text-link', check.status === 'ready' ? '查看 ↗' : check.status === 'optional' ? '添加 ↗' : '去补充 →');
+    action.type = 'button'; action.setAttribute('aria-label', `${action.textContent}：${check.label}`);
+    action.addEventListener('click', () => goToCheck(check));
+    row.append(makeSymbol(), details, action); list.append(row);
+  }
 }
 function showStep(step, focus = false) {
   if (step > 1 && !state.base) return;
@@ -624,28 +684,47 @@ async function embedProjectImages(snapshot) {
   ]);
   return snapshot;
 }
-async function exportProject() {
+async function exportDesign(asBundle = false) {
   if (!state.base || exporting) return;
   exporting = true;
-  for (const id of ['export-project', 'persona-export', 'trial-export']) $(id).disabled = true;
+  for (const id of ['export-project', 'persona-export', 'trial-export', 'export-bundle']) $(id).disabled = true;
   const revision = state.revision;
   const panel = state.step === 4 ? 'trial' : state.step === 3 ? 'persona' : 'pose';
   const snapshot = projectSnapshot();
+  const status = $('bundle-status');
+  if (asBundle) {
+    status.hidden = false; status.classList.remove('error');
+    status.textContent = '正在整理图片、提示词和设计备份…';
+    $('export-bundle').textContent = '正在整理创作包…';
+  }
   try {
+    // Allow the progress message to paint before decoding larger local images.
+    if (asBundle) await new Promise(resolve => window.setTimeout(resolve, 0));
     await embedProjectImages(snapshot);
     if (revision !== state.revision) return;
     const payload = normalizeProject(snapshot);
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json;charset=utf-8' });
-    if (blob.size > PROJECT_MAX_BYTES) throw new Error('项目超过 100 MB，请缩小图片后再保存');
-    const url = URL.createObjectURL(blob); downloadUrl(url, 'Ha-mio-角色设计草稿.json');
+    const bundle = asBundle ? await buildCreationBundle(payload) : null;
+    if (revision !== state.revision) return;
+    const blob = bundle?.blob || new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json;charset=utf-8' });
+    if (!asBundle && blob.size > PROJECT_MAX_BYTES) throw new Error('项目超过 100 MB，请缩小图片后再保存');
+    const url = URL.createObjectURL(blob); downloadUrl(url, bundle?.filename || 'Ha-mio-角色设计草稿.json');
     window.setTimeout(() => URL.revokeObjectURL(url), 30000);
-    notice(panel, '项目已导出，包含图片、姿势参考、修改要求、旧版本、人设与互动设置。可通过“导入设计”继续；这不是安装包');
-  } catch (error) { notice(panel, error.message || '保存未完成，请稍后重试', true); }
+    if (asBundle) {
+      status.textContent = `创作包已交给浏览器下载，共 ${bundle.fileCount} 个文件。解压后导入 project.json 可继续编辑；这不是桌宠安装包`;
+    } else notice(panel, '项目已导出，包含图片、姿势参考、修改要求、旧版本、人设与互动设置。可通过“导入设计”继续；这不是安装包');
+  } catch (error) {
+    const message = error.message || '保存未完成，请稍后重试';
+    if (asBundle) { status.hidden = false; status.textContent = `创作包未导出：${message}。当前设计仍然保留`; status.classList.add('error'); }
+    else notice(panel, message, true);
+  }
   finally {
     exporting = false;
-    for (const id of ['export-project', 'persona-export', 'trial-export']) $(id).disabled = false;
+    for (const id of ['export-project', 'persona-export', 'trial-export', 'export-bundle']) $(id).disabled = !state.base;
+    $('export-bundle').textContent = '导出创作包 ZIP ↓';
+    if (asBundle && revision !== state.revision) status.textContent = '设计已切换，本次导出已取消，请按当前设计重新导出';
   }
 }
+function exportProject() { return exportDesign(); }
 function validateImportedImage(dataUrl) {
   return new Promise((resolve, reject) => {
     const image = new Image();
@@ -730,6 +809,7 @@ function draftStatus(message, error = false) {
   $('draft-status').classList.toggle('error', error);
 }
 function scheduleDraft() {
+  renderCreationReview();
   if (!draftReady) return;
   draftRevision += 1; clearTimeout(draftTimer);
   draftStatus('有新修改，正在准备保存…');
@@ -825,6 +905,12 @@ $('add-pose').addEventListener('click', () => {
 $('export-project').addEventListener('click', exportProject);
 $('persona-export').addEventListener('click', exportProject);
 $('trial-export').addEventListener('click', exportProject);
+$('export-bundle').addEventListener('click', () => exportDesign(true));
+$('review-next').addEventListener('click', () => {
+  const next = creationReview().next;
+  if (next) goToCheck(next);
+  else showStep(4, true);
+});
 $('project-input').addEventListener('change', (event) => {
   const file = event.target.files[0]; event.target.value = ''; importProject(file);
 });
@@ -856,7 +942,9 @@ $('reset-project').addEventListener('click', async () => {
   $('description').value = ''; $('custom-pose-name').value = ''; $('custom-pose-description').value = ''; $('reference-input').value = '';
   document.querySelector('input[name="style"][value="soft"]').checked = true;
   document.querySelector('input[name="count"][value="4"]').checked = true;
-  notice('chibi', ''); notice('pose', ''); notice('trial', ''); notice('project', ''); renderReferences(); renderCandidates(); renderPoseOptions(); showStep(1, true);
+  notice('chibi', ''); notice('pose', ''); notice('trial', ''); notice('project', '');
+  $('bundle-status').hidden = true; $('bundle-status').textContent = '';
+  renderReferences(); renderCandidates(); renderPoseOptions(); showStep(1, true);
   try { await draftStore.clear(); if (resetRevision === draftRevision) draftStatus('本地草稿已清除 · 可以重新开始'); }
   catch (error) { if (resetRevision === draftRevision) draftStatus(`未能清除旧草稿：${error.message}。请点击“立即保存”覆盖为空白设计`, true); }
 });

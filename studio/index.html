@@ -8,9 +8,9 @@
   <title>角色创作间 · Ha!mio</title>
   <link rel="icon" href="../favicon.ico">
   <link rel="stylesheet" href="studio.css?v=workflow-1">
-  <link rel="stylesheet" href="workflow.css?v=workflow-1">
+  <link rel="stylesheet" href="workflow.css?v=delivery-1">
   <link rel="stylesheet" href="interactions.css?v=workflow-1">
-  <script type="module" src="studio.js?v=server-1"></script>
+  <script type="module" src="studio.js?v=delivery-1"></script>
 </head>
 <body>
   <a class="skip-link" href="#workspace">跳到创作区域</a>
@@ -35,6 +35,10 @@
       <button class="step" id="step-four" disabled><span class="step-number">04</span><span>和她试着相处<small>模拟互动 → 保存设计</small></span><span class="step-lock" id="trial-step-lock">先确认形象</span></button>
     </div>
 
+    <section class="creation-progress" aria-label="当前设计概览">
+      <div class="creation-progress-heading"><div><span class="eyebrow">YOUR LITTLE CREATION</span><h2 id="creation-next-hint">先选定一个喜欢的形象</h2></div><button type="button" class="button secondary" id="review-next">从这里开始 →</button></div>
+      <div class="creation-checkpoints" id="creation-checkpoints"></div>
+    </section>
     <section class="workspace" id="workspace" aria-label="角色创作工作台">
       <div id="chibi-panel" class="workspace-layout">
         <aside class="control-panel">
@@ -152,7 +156,16 @@
           </div>
           <div class="trial-caption"><span id="trial-current-pose">当前：基础形象</span><span id="trial-motion-status">轻轻晃动中</span></div>
           <p class="field-note trial-disclaimer">这里展示已准备的姿态和手写开场白，不是 AI 回复；工作、休息由按钮模拟，不读取真实应用。预览仅在网页内显示</p>
-          <div class="result-footer trial-footer"><p>把形象、姿态、人设和预览设置一起保存<br>下次通过右上角「导入设计」继续</p><button class="button primary" id="trial-export">保存我的角色 <span aria-hidden="true">↓</span></button></div>
+          <section class="delivery-card" aria-labelledby="delivery-title">
+            <div class="delivery-heading"><div><p class="eyebrow">TAKE HER WITH YOU</p><h3 id="delivery-title">把这份喜欢，认真收好</h3></div><span class="delivery-icon" aria-hidden="true">✦</span></div>
+            <p class="delivery-intro">看看还有什么想补充的。现在就能导出，未完成的部分可以下次继续</p>
+            <ul class="delivery-checklist" id="delivery-checklist"></ul>
+            <div class="bundle-contents"><strong>创作包里有什么？</strong><p>选定形象 · 已有姿态图片 · 人设提示词 · 完整设计备份</p><small>参考图、修改要求和旧版本保存在完整设计中。解压后导入 project.json，即可继续编辑</small></div>
+            <button class="button primary full-width" id="export-bundle" type="button" disabled>导出创作包 ZIP <span aria-hidden="true">↓</span></button>
+            <p id="bundle-status" class="bundle-status" role="status" hidden></p>
+            <p class="bundle-note">这是素材和设定包，暂不生成 APK / EXE，也不会调用付费 AI 接口</p>
+          </section>
+          <div class="result-footer trial-footer"><p>只需要下次继续编辑？<br>也可以单独保存一份设计文件</p><button class="button secondary" id="trial-export">保存设计 JSON <span aria-hidden="true">↓</span></button></div>
         </div>
       </div>
     </section>
