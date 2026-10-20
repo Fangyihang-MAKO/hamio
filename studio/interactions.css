@@ -1,0 +1,32 @@
+/* The preview uses existing still images. These controls describe the trigger,
+   selected image, and missing-image fallback without implying generated motion. */
+.trial-bindings { padding-top: 3px; }
+.trial-binding-row { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; margin-top: 13px; }
+.trial-binding-row > label { color: #637e65; font-size: 10px; line-height: 1.6; }
+.trial-binding-row select { width: 100%; min-width: 0; max-width: 100%; min-height: 37px; padding: 8px 9px; border: 1px solid #dfe7d7; border-radius: 8px; background: #fffefb; color: #456c56; font: inherit; font-size: 10px; text-overflow: ellipsis; outline-offset: 3px; }
+.trial-binding-row select:focus-visible { outline: 3px solid #a47d51; }
+.trial-binding-hint { color: #8a9a7f; font-size: 9px; line-height: 1.7; overflow-wrap: anywhere; }
+.trial-binding-hint.is-fallback { color: #9a8059; }
+.trial-scenarios { margin-bottom: 14px; padding: 13px 15px 12px; border: 1px solid #e0e8d7; border-radius: 12px; background: #f8faf2; }
+.trial-scenario-heading { display: flex; align-items: center; justify-content: space-between; gap: 10px; color: #52725c; font-size: 11px; font-weight: 600; }
+.trial-scenario-heading > span { color: #8c9b7d; font-size: 9px; font-weight: 400; }
+.trial-scenario-actions { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 11px; }
+.trial-scenario-actions button { min-height: 35px; padding: 8px 12px; border: 1px solid #dce5d2; border-radius: 8px; background: #fffefb; color: #688360; font-size: 10px; line-height: 1.5; }
+.trial-scenario-actions button:hover:not(:disabled) { background: #f0f5e8; }
+.trial-scenario-actions button[aria-pressed="true"] { border-color: #93b394; background: #e9f3e5; color: #357454; }
+.trial-interaction-status { margin-top: 10px; color: #798c6f; font-size: 10px; line-height: 1.8; overflow-wrap: anywhere; }
+.trial-interaction-status.is-fallback { color: #977c4d; }
+.trial-pet[data-edge="right"][data-peek="true"] img { transform: scaleX(-1); }
+.trial-arena.is-work-scenario .trial-desktop-window { opacity: .95; background: #fffef799; }
+.trial-arena.is-rest-scenario { background: linear-gradient(145deg, #edf2eb 0%, #f0f3ef 40%, #edece1 100%); }
+@media (max-width: 760px) {
+  .trial-bindings { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 13px; }
+  .trial-bindings > legend { margin-bottom: 0; }
+  .trial-binding-row { margin-top: 12px; }
+  .trial-scenarios { padding: 12px; }
+  .trial-scenario-actions { gap: 6px; }
+  .trial-scenario-actions button { flex: 1 1 calc(50% - 6px); }
+}
+@media (max-width: 370px) {
+  .trial-bindings { grid-template-columns: minmax(0, 1fr); }
+}

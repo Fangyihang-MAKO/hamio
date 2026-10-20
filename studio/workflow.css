@@ -1,0 +1,36 @@
+.draft-bar { display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px; padding:13px 17px; margin:0 0 24px; border:1px solid #dfe8d5; border-radius:12px; background:#f9fcf4; color:#657e66; font-size:11px; line-height:1.7; }
+.draft-dot { width:7px; height:7px; background:#87ab83; border-radius:50%; flex-shrink:0; }
+.draft-bar small { flex-basis:100%; padding-left:19px; color:#929e88; font-size:9px; }
+.draft-bar button { margin-left:auto; flex-shrink:0; }
+#draft-status.error { color:#a9563e; }
+.pose-workflow-hint { font-size:11px; line-height:1.9; color:#869377; padding:0 0 20px; max-width:720px; }
+.pose-edit { margin:16px 0; padding-top:13px; border-top:1px solid #edf0e6; }
+.pose-edit .field-label { display:block; font-size:11px; color:#657c5e; }
+.pose-edit-note { margin-top:9px; font-size:11px; line-height:1.8; min-height:78px; resize:vertical; }
+.pose-reference { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:12px; }
+.pose-reference img { width:54px; height:54px; object-fit:contain; padding:3px; border:1px solid #e4e8dc; border-radius:8px; background:#f8faf3; }
+.pose-reference > span { flex:1; min-width:75px; color:#8e9d80; font-size:10px; line-height:1.6; }
+.pose-file-button { position:relative; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; border:1px dashed #b6c9a6; border-radius:7px; padding:8px 9px; font-size:10px; color:#5d8266; background:#f7faf1; line-height:1.6; }
+.pose-file-button:hover { background:#edf4e6; }
+.pose-file-button:focus-within { outline:2px solid #7e9f7b; outline-offset:2px; }
+.pose-file-button input { position:absolute; inset:0; opacity:0; width:100%; height:100%; cursor:pointer; padding:0; }
+.pose-actions { flex-wrap:wrap; align-items:center; gap:8px; }
+.pose-actions button { font-size:10px; }
+.pose-comparison { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:18px; padding-top:15px; border-top:1px solid #e4eadb; }
+.pose-version { display:flex; flex-direction:column; align-items:stretch; min-width:0; gap:9px; text-align:center; }
+.pose-version strong { font-size:11px; font-weight:500; color:#5f7f63; min-height:31px; display:grid; place-items:center; }
+.pose-version img { width:100%; aspect-ratio:1; object-fit:contain; background:linear-gradient(135deg,#f0f5e8,#faf7ed); border-radius:8px; padding:8px; }
+.pose-version select { width:100%; min-width:0; padding:6px; border:1px solid #dce5d1; color:#667f62; background:#fffef9; border-radius:6px; font-size:10px; }
+.pose-version .button { padding:8px 6px; font-size:10px; min-height:32px; }
+@media(max-width:760px) { .draft-bar { padding:11px 13px; font-size:10px; margin-bottom:20px; } .draft-bar small { font-size:8px; } .pose-workflow-hint { font-size:10px; } }
+@media(max-width:520px) {
+  .pose-grid { grid-template-columns:minmax(0,1fr); }
+  .pose-image { aspect-ratio:1.2; }
+  .pose-info { padding:16px; }
+  .pose-title strong { font-size:14px; }
+  .pose-edit .field-label, .pose-edit-note { font-size:12px; }
+  .pose-file-button, .pose-actions button { font-size:11px; min-height:40px; }
+  .pose-reference > span { font-size:11px; }
+  .pose-version select, .pose-version .button { min-height:40px; font-size:11px; }
+  .draft-bar small { font-size:10px; }
+}
