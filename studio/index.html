@@ -4,29 +4,32 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="theme-color" content="#f5f8f2">
-  <meta name="description" content="Ha!mio 角色创作间：选择 Q 版形象、设计姿态，再写下专属人设。当前为界面体验版，AI 接口待接入。">
+  <meta name="description" content="Ha!mio 角色创作间：选择 Q 版形象、设计姿态、写下专属人设，在模拟桌面里试着相处。当前为界面体验版，AI 接口待接入。">
   <title>角色创作间 · Ha!mio</title>
   <link rel="icon" href="../favicon.ico">
-  <link rel="stylesheet" href="studio.css?v=persona-1">
-  <script type="module" src="studio.js?v=persona-1"></script>
+  <link rel="stylesheet" href="studio.css?v=trial-1">
+  <script type="module" src="studio.js?v=trial-1"></script>
 </head>
 <body>
   <a class="skip-link" href="#workspace">跳到创作区域</a>
   <header class="header page-width">
     <a class="brand" href="../"><img src="../assets/idle.png" width="46" height="46" alt=""><span>Ha!mio <small>角色创作间</small></span></a>
-    <nav aria-label="页面导航"><a href="../">返回下载页 <span aria-hidden="true">↗</span></a></nav>
+    <nav aria-label="页面导航"><label class="project-import" for="project-input">导入设计 <span aria-hidden="true">↑</span><input id="project-input" type="file" accept=".json,application/json"></label><a href="../">返回下载页 <span aria-hidden="true">↗</span></a></nav>
   </header>
   <main class="page-width">
     <section class="intro" aria-labelledby="page-title">
       <div><p class="eyebrow"><span class="little-star" aria-hidden="true">✦</span> 一点想象，一位新朋友</p><h1 id="page-title">让喜欢的角色，<span>变成小小的陪伴</span></h1><p class="intro-text">从模样、姿态到性格，慢慢写下你想认识的她</p></div>
       <div class="mode-tag"><span class="status-dot" aria-hidden="true"></span><span>界面体验版<small id="api-label">图片生成接口待接入</small></span></div>
     </section>
+    <div class="notice" id="project-notice" role="status" hidden></div>
     <div class="steps" aria-label="创作步骤">
       <button class="step is-current" id="step-one" aria-current="step"><span class="step-number">01</span><span>找到她的模样<small>参考图片 → 多张 Q 版候选</small></span></button>
       <span class="step-line" aria-hidden="true"></span>
       <button class="step" id="step-two" disabled><span class="step-number">02</span><span>让她多一点生动<small>选择姿态 → 逐张调整</small></span><span class="step-lock" id="step-lock">先确认形象</span></button>
       <span class="step-line" aria-hidden="true"></span>
       <button class="step" id="step-three" disabled><span class="step-number">03</span><span>写下她的性格<small>描述人设 → 整理提示词</small></span><span class="step-lock" id="persona-step-lock">先确认形象</span></button>
+      <span class="step-line" aria-hidden="true"></span>
+      <button class="step" id="step-four" disabled><span class="step-number">04</span><span>和她试着相处<small>桌面预览 → 保存设计</small></span><span class="step-lock" id="trial-step-lock">先确认形象</span></button>
     </div>
 
     <section class="workspace" id="workspace" aria-label="角色创作工作台">
@@ -117,11 +120,39 @@
           <div class="persona-character"><div class="persona-avatar-wrap"><img id="persona-avatar" alt="正在设计人设的角色"></div><div><span class="persona-character-caption">正在认识</span><strong id="persona-character-name">你的角色</strong><span id="persona-source"></span></div><span class="persona-character-spark" aria-hidden="true">✦</span></div>
           <section class="persona-preview-section" aria-labelledby="dialogue-preview-title"><div class="persona-section-heading"><h3 id="dialogue-preview-title">听听你写的她</h3><span>手写内容预览</span></div><div id="persona-dialogue" class="persona-dialogue"><p class="persona-preview-empty">写下一句招呼或对话示例，它们会出现在这里</p></div><p class="field-note">这里只展示你填写的台词，不是 AI 实时回复</p></section>
           <section class="persona-prompt-section" aria-labelledby="prompt-preview-title"><div class="persona-section-heading"><h3 id="prompt-preview-title">她的人设提示词</h3><span id="prompt-count">0 字</span></div><label class="sr-only" for="prompt-preview">根据填写内容整理的人设提示词</label><textarea id="prompt-preview" readonly rows="18" placeholder="左侧的设定会整理为可复制的人设提示词"></textarea><p class="field-note">随填写内容更新，可供后续聊天功能使用；尚未连接 AI 对话</p><div class="persona-prompt-actions"><button class="button secondary" id="copy-prompt">复制提示词</button><button class="button subtle" id="download-prompt">下载 TXT <span aria-hidden="true">↓</span></button></div></section>
-          <div class="result-footer persona-footer"><p>把形象、姿态和人设一起保存，留住这次创作</p><button class="button primary" id="persona-export">保存完整设计 JSON <span aria-hidden="true">↓</span></button></div>
+          <div class="result-footer persona-footer"><p>把形象、姿态和人设一起保存，留住这次创作</p><div class="footer-actions"><button class="button subtle" id="persona-export">保存完整设计 JSON <span aria-hidden="true">↓</span></button><button class="button primary" id="continue-trial">下一步，试着相处 <span aria-hidden="true">→</span></button></div></div>
+        </div>
+      </div>
+
+      <div id="trial-panel" class="workspace-layout trial-layout" hidden>
+        <aside class="control-panel trial-controls">
+          <div class="panel-heading"><span class="section-index">04</span><h2>让陪伴刚刚好</h2></div>
+          <button class="text-link persona-back" id="trial-back">← 返回人设设计</button>
+          <p class="trial-character-caption">正在试养</p><h3 id="trial-character-name">你的角色</h3><p id="trial-character-source" class="field-note"></p>
+          <div class="form-section trial-range-group"><label class="field-label" for="trial-size">角色大小 <output id="trial-size-value" for="trial-size">70%</output></label><input type="range" id="trial-size" min="30" max="100" step="1" value="70"></div>
+          <div class="form-section trial-range-group"><label class="field-label" for="trial-opacity">不透明度 <output id="trial-opacity-value" for="trial-opacity">100%</output></label><input type="range" id="trial-opacity" min="20" max="100" step="1" value="100"></div>
+          <div class="form-section trial-range-group"><label class="field-label" for="trial-sway">晃动幅度 <output id="trial-sway-value" for="trial-sway">40%</output></label><input type="range" id="trial-sway" min="0" max="100" step="1" value="40"></div>
+          <fieldset class="form-section"><legend class="field-label">切换姿态 <span id="trial-pose-count">0 个可用</span></legend><div id="trial-pose-options" class="trial-pose-options"></div><p id="trial-pose-note" class="field-note">只展示当前角色已准备好的图片</p></fieldset>
+          <button class="button secondary full-width" id="trial-say-greeting">再听一次开场白 <span aria-hidden="true">♡</span></button>
+          <div class="trial-small-actions"><button class="text-link" id="trial-home">回到初始位置</button><button class="text-link" id="trial-reset">恢复预览默认值</button></div>
+          <p class="field-note trial-control-note">拖动她，找个喜欢的位置；轻点可切换已有姿态。也可选中她后，用方向键移动、回车切换</p>
+        </aside>
+        <div class="result-panel trial-result">
+          <div class="result-heading"><div><p class="eyebrow">A LITTLE TIME TOGETHER</p><h2>先在这里，陪你一小会儿</h2></div><span class="small-pill">网页内模拟桌面</span></div>
+          <div class="notice" id="trial-notice" role="status" hidden></div>
+          <div class="trial-arena" id="trial-arena" aria-label="桌宠模拟桌面">
+            <div class="trial-wallpaper" aria-hidden="true"><span class="trial-wallpaper-orbit"></span><span class="trial-firefly f-one"></span><span class="trial-firefly f-two"></span><span class="trial-firefly f-three"></span><span class="trial-firefly f-four"></span><div class="trial-desktop-note"><span>✦</span><p>给生活留一点<br>柔软的空白</p><small>JUST A LITTLE COMPANY</small></div><div class="trial-desktop-window"><span class="window-dots">● ● ●</span><span class="window-line"></span><span class="window-line short"></span><span class="window-line"></span></div><div class="trial-taskbar"><span>✿</span><i></i><i></i><i></i><span class="taskbar-label">你的模拟桌面</span></div></div>
+            <div class="trial-speech" id="trial-speech" hidden><span id="trial-speech-source">你写的开场白</span><p id="trial-speech-text"></p></div>
+            <button class="trial-pet" id="trial-pet" aria-label="拖动角色；轻点切换已有姿态" title="拖动她，或轻点切换已有姿态" type="button"><span class="trial-pet-body" id="trial-pet-body"><img id="trial-image-a" alt="" draggable="false"><img id="trial-image-b" alt="" draggable="false"></span></button>
+            <p class="trial-arena-empty" id="trial-arena-empty">先确认一个角色形象，再来这里见面</p>
+          </div>
+          <div class="trial-caption"><span id="trial-current-pose">当前：基础形象</span><span id="trial-motion-status">轻轻晃动中</span></div>
+          <p class="field-note trial-disclaimer">这里的开场白来自你填写的人设，不是 AI 回复；预览只在网页里显示，不会悬浮到其他应用上</p>
+          <div class="result-footer trial-footer"><p>把形象、姿态、人设和预览设置一起保存<br>下次通过右上角「导入设计」继续</p><button class="button primary" id="trial-export">保存我的角色 <span aria-hidden="true">↓</span></button></div>
         </div>
       </div>
     </section>
-    <aside class="bottom-note"><span aria-hidden="true">✦</span><p>模样、姿态、性格，拼成独属于你的陪伴<span>当前可设计形象与人设并导出；AI 生成、聊天与桌宠打包将在后续接入</span></p></aside>
+    <aside class="bottom-note"><span aria-hidden="true">✦</span><p>模样、姿态、性格，拼成独属于你的陪伴<span>当前可编辑、试养预览并保存设计；AI 生成、聊天与桌宠打包将在后续接入</span></p></aside>
   </main>
   <footer class="page-width footer"><a href="../">Ha!mio</a><span>小小一只，慢慢创造</span><button class="text-link" id="reset-project">重新开始</button></footer>
   <noscript><p class="noscript">请开启浏览器 JavaScript，才能使用图片上传和角色设计功能</p></noscript>

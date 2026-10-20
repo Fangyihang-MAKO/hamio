@@ -1,5 +1,7 @@
 import { generateChibi, generatePoses, getGenerationStatus } from './api.js';
 import { PERSONA_FIELDS, createPersonaDraft, getFireflyPersonaExample, normalizePersonaDraft, compilePersonaPrompt, refinePersona } from './persona.js';
+import { createPetPreview } from './preview.js?v=trial-1';
+import { parseProject, normalizeProject, PROJECT_MAX_BYTES } from './project.js?v=trial-1';
 
 const $ = (id) => document.getElementById(id);
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
@@ -26,6 +28,9 @@ const state = {
   step: 1,
 };
 const persona = { draft: createPersonaDraft(), source: 'manual', revision: 0, busy: false, controller: null };
+let petPreview = null;
+let importAttempt = 0;
+let exporting = false;
 
 function element(tag, className, text) {
   const node = document.createElement(tag);
@@ -52,10 +57,12 @@ function cancelPending() {
 function clearCharacter() {
   // A later image read must not overwrite a character chosen in the meantime.
   state.uploadRevision += 1;
+  importAttempt += 1;
   cancelPending();
   state.base = null;
   state.poses = [];
   state.redo.clear();
+  petPreview?.reset();
   resetPersona();
   renderPoses();
   updateControls();
@@ -72,6 +79,9 @@ function updateControls() {
   $('confirm-character').disabled = !state.selectedId || state.busy;
   $('step-two').disabled = !state.base;
   $('step-three').disabled = !state.base;
+  $('step-four').disabled = !state.base;
+  $('continue-trial').disabled = !state.base || state.busy;
+  $('trial-step-lock').hidden = Boolean(state.base);
   $('continue-persona').disabled = !state.base || state.busy;
   $('persona-step-lock').hidden = Boolean(state.base);
   $('step-lock').hidden = Boolean(state.base);
@@ -85,16 +95,20 @@ function showStep(step, focus = false) {
   $('chibi-panel').hidden = step !== 1;
   $('pose-panel').hidden = step !== 2;
   $('persona-panel').hidden = step !== 3;
+  $('trial-panel').hidden = step !== 4;
   $('step-one').classList.toggle('is-current', step === 1);
   $('step-two').classList.toggle('is-current', step === 2);
   $('step-three').classList.toggle('is-current', step === 3);
+  $('step-four').classList.toggle('is-current', step === 4);
   $('step-one').setAttribute('aria-current', step === 1 ? 'step' : 'false');
   $('step-two').setAttribute('aria-current', step === 2 ? 'step' : 'false');
   $('step-three').setAttribute('aria-current', step === 3 ? 'step' : 'false');
+  $('step-four').setAttribute('aria-current', step === 4 ? 'step' : 'false');
   if (step === 3) renderPersonaPreview();
+  petPreview?.setActive(step === 4);
   if (focus) {
     $('workspace').scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'start' });
-    (step === 1 ? $('reference-input') : step === 2 ? $('generate-poses') : $('persona-brief')).focus({ preventScroll: true });
+    (step === 1 ? $('reference-input') : step === 2 ? $('generate-poses') : step === 3 ? $('persona-brief') : $('trial-back')).focus({ preventScroll: true });
   }
 }
 function renderReferences() {
@@ -471,34 +485,113 @@ function downloadPrompt() {
   notice('persona', '人设提示词已下载，可在之后接入的聊天服务中使用');
 }
 async function exportProject() {
-  if (!state.base) return;
-  const button = $('export-project'); button.disabled = true;
-  $('persona-export').disabled = true;
+  if (!state.base || exporting) return;
+  exporting = true;
+  for (const id of ['export-project', 'persona-export', 'trial-export']) $(id).disabled = true;
   const revision = state.revision;
-  const panel = state.step === 3 ? 'persona' : 'pose';
-  const personaSnapshot = normalizePersonaDraft(persona.draft);
-  const personaSource = persona.source;
+  const panel = state.step === 4 ? 'trial' : state.step === 3 ? 'persona' : 'pose';
+  // Capture all editable settings together, before fetching any example images.
+  const snapshot = structuredClone({
+    schema: 'hamio-character-studio', schemaVersion: 3, edition: 'interface-preview',
+    createdAt: new Date().toISOString(), description: $('description').value,
+    style: document.querySelector('input[name="style"]:checked').value,
+    requestedCount: Number(document.querySelector('input[name="count"]:checked').value),
+    references: state.references, candidates: state.candidates, baseImage: state.base,
+    poseDefinitions: state.definitions.map(({ id, name, description }) => ({ id, name, description })),
+    selectedPoseIds: [...state.chosenPoses], poses: state.poses,
+    persona: { ...normalizePersonaDraft(persona.draft), source: persona.source },
+    previewSettings: petPreview.getSettings(),
+  });
   try {
-    const base = { ...state.base, dataUrl: await asDataUrl(state.base) };
-    const poses = await Promise.all(state.poses.map(async (pose) => ({ ...pose, image: pose.image ? { ...pose.image, dataUrl: await asDataUrl(pose.image) } : null })));
-    if (revision !== state.revision) return;
-    const payload = {
-      schema: 'hamio-character-studio', schemaVersion: 2, edition: 'interface-preview',
-      notice: '角色设计草稿，不是桌宠安装包；source=demo 为已有示例，source=reference 为未转换原图',
-      createdAt: new Date().toISOString(), description: $('description').value.trim(),
-      style: document.querySelector('input[name="style"]:checked').value,
-      requestedCount: Number(document.querySelector('input[name="count"]:checked').value),
-      references: state.references.map((reference) => ({ ...reference })), baseImage: base,
-      poseDefinitions: state.definitions.map(({ id, name, description }) => ({ id, name, description })),
-      selectedPoseIds: [...state.chosenPoses], poses,
-      persona: { ...personaSnapshot, source: personaSource, systemPrompt: compilePersonaPrompt(personaSnapshot) },
+    const images = new Map();
+    const embed = async (image) => {
+      if (!images.has(image.dataUrl)) images.set(image.dataUrl, asDataUrl(image));
+      return { ...image, dataUrl: await images.get(image.dataUrl) };
     };
+    snapshot.baseImage = await embed(snapshot.baseImage);
+    snapshot.references = await Promise.all(snapshot.references.map(embed));
+    snapshot.candidates = await Promise.all(snapshot.candidates.map(embed));
+    snapshot.poses = await Promise.all(snapshot.poses.map(async (pose) => ({ ...pose, image: pose.image ? await embed(pose.image) : null })));
+    if (revision !== state.revision) return;
+    const payload = normalizeProject(snapshot);
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json;charset=utf-8' });
+    if (blob.size > PROJECT_MAX_BYTES) throw new Error('项目超过 100 MB，请缩小图片后再保存');
     const url = URL.createObjectURL(blob); downloadUrl(url, 'Ha-mio-角色设计草稿.json');
     window.setTimeout(() => URL.revokeObjectURL(url), 30000);
-    notice(panel, '设计草稿已导出，包含图片、姿态和人设；这是 JSON 文件，不是桌宠安装包');
-  } catch { notice(panel, '保存未完成，请稍后重试', true); }
-  finally { button.disabled = false; $('persona-export').disabled = false; }
+    notice(panel, '项目已导出，包含候选图片、姿态、人设和试养设置。下次点击页顶“导入设计”即可继续；这不是安装包');
+  } catch (error) { notice(panel, error.message || '保存未完成，请稍后重试', true); }
+  finally {
+    exporting = false;
+    for (const id of ['export-project', 'persona-export', 'trial-export']) $(id).disabled = false;
+  }
+}
+function validateImportedImage(dataUrl) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    const timer = window.setTimeout(() => { image.src = ''; reject(new Error('项目内有图片无法读取，请检查文件')); }, 15000);
+    image.onload = () => {
+      clearTimeout(timer);
+      if (!image.naturalWidth || !image.naturalHeight || image.naturalWidth * image.naturalHeight > 50000000) reject(new Error('项目内图片尺寸过大，请使用不超过 5000 万像素的图片'));
+      else resolve();
+    };
+    image.onerror = () => { clearTimeout(timer); reject(new Error('项目内有损坏的图片，当前设计未改变')); };
+    image.src = dataUrl;
+  });
+}
+function syncBaseSummary() {
+  if (!state.base) return;
+  $('base-preview').src = state.base.dataUrl;
+  $('base-name').textContent = state.base.name;
+  $('base-source').textContent = sourceName(state.base.source);
+  $('download-base').textContent = state.base.source === 'reference' ? '下载原图 ↓' : state.base.source === 'demo' ? '下载示例 ↓' : '下载图片 ↓';
+  $('load-pose-examples').hidden = state.base.source !== 'demo';
+}
+async function importProject(file) {
+  if (!file) return;
+  const attempt = ++importAttempt;
+  try {
+    if (file.size > PROJECT_MAX_BYTES) throw new Error('项目文件不能超过 100 MB');
+    notice('project', '正在读取并检查项目，当前设计会保留到确认导入为止');
+    const project = parseProject(await file.text());
+    const imageData = new Set([
+      project.baseImage.dataUrl, ...project.references.map(x => x.dataUrl),
+      ...project.candidates.map(x => x.dataUrl), ...project.poses.flatMap(x => x.image ? [x.image.dataUrl] : []),
+    ]);
+    // Decode one at a time to avoid a large memory spike from a whole sprite set.
+    for (const dataUrl of imageData) {
+      if (attempt !== importAttempt) return;
+      await validateImportedImage(dataUrl);
+    }
+    if (attempt !== importAttempt) return;
+    if ((state.references.length || state.candidates.length || state.base) && !window.confirm('导入会替换当前页面的设计。尚未保存的修改会丢失，确定导入吗？')) {
+      notice('project', '已取消导入，当前设计没有改变'); return;
+    }
+    clearCharacter();
+    state.references = project.references;
+    state.candidates = project.candidates;
+    state.selectedId = project.baseImage.id;
+    state.base = project.baseImage;
+    state.definitions = project.poseDefinitions.map((definition) => {
+      const sample = DEFAULT_POSES.find(x => x.id === definition.id)?.sample;
+      return { ...definition, ...(sample ? { sample } : {}) };
+    });
+    state.chosenPoses = new Set(project.selectedPoseIds);
+    state.poses = project.poses;
+    $('description').value = project.description;
+    $('custom-pose-name').value = ''; $('custom-pose-description').value = '';
+    document.querySelector(`input[name="style"][value="${project.style}"]`).checked = true;
+    document.querySelector(`input[name="count"][value="${project.requestedCount}"]`).checked = true;
+    setPersonaDraft(project.persona, project.persona.source);
+    syncBaseSummary(); renderReferences(); renderCandidates(); renderPoseOptions(); renderPoses();
+    petPreview.setSettings(project.previewSettings);
+    notice('chibi', '已恢复项目中的候选图片，可以继续选择和编辑');
+    notice('pose', '已恢复项目中的姿态与待生成状态');
+    notice('trial', '已恢复试养设置。这里只预览项目中的图片和台词，不会执行 AI 对话');
+    notice('project', '项目已导入，图片、人设和试养设置均已恢复；文件仅在当前浏览器内读取');
+    showStep(4, true);
+  } catch (error) {
+    if (attempt === importAttempt) notice('project', error.message || '项目无法读取，当前设计没有改变', true);
+  }
 }
 
 $('reference-input').addEventListener('change', (event) => {
@@ -520,19 +613,18 @@ $('confirm-character').addEventListener('click', () => {
   const candidate = state.candidates.find((image) => image.id === state.selectedId);
   if (!candidate) return;
   if (state.base?.id !== candidate.id) { clearCharacter(); state.base = { ...candidate }; }
-  $('base-preview').src = state.base.dataUrl;
-  $('base-name').textContent = state.base.name;
-  $('base-source').textContent = sourceName(state.base.source);
-  $('download-base').textContent = state.base.source === 'reference' ? '下载原图 ↓' : state.base.source === 'demo' ? '下载示例 ↓' : '下载图片 ↓';
-  $('load-pose-examples').hidden = state.base.source !== 'demo';
+  syncBaseSummary();
   notice('pose', state.base.source === 'demo' ? '当前使用已有流萤示例。选好姿态后，可查看对应示例图片，或体验生成与逐张重做的入口' : state.base.source === 'reference' ? '当前形象是上传的参考原图，尚未转换为 Q 版。图片接口接入后才能生成不同姿态' : '选择一个或多个姿态，再开始生成');
   updateControls(); showStep(2, true);
 });
 $('step-one').addEventListener('click', () => showStep(1));
 $('step-two').addEventListener('click', () => { if (state.base) showStep(2); });
 $('step-three').addEventListener('click', () => showStep(3));
+$('step-four').addEventListener('click', () => showStep(4));
 $('continue-persona').addEventListener('click', () => showStep(3, true));
+$('continue-trial').addEventListener('click', () => showStep(4, true));
 $('persona-back').addEventListener('click', () => showStep(2, true));
+$('trial-back').addEventListener('click', () => showStep(3, true));
 $('change-character').addEventListener('click', () => { showStep(1, true); notice('chibi', '再次确认同一张形象，会保留已有姿态和人设。选择其他形象会清空这些设置，如需保留，请先保存设计 JSON'); });
 $('download-base').addEventListener('click', async () => {
   if (!state.base) return;
@@ -559,6 +651,10 @@ $('add-pose').addEventListener('click', () => {
 });
 $('export-project').addEventListener('click', exportProject);
 $('persona-export').addEventListener('click', exportProject);
+$('trial-export').addEventListener('click', exportProject);
+$('project-input').addEventListener('change', (event) => {
+  const file = event.target.files[0]; event.target.value = ''; importProject(file);
+});
 $('persona-brief').addEventListener('input', editPersona);
 for (const field of PERSONA_FIELDS) $('persona-' + field).addEventListener('input', editPersona);
 $('persona-use-example').addEventListener('click', () => {
@@ -585,9 +681,14 @@ $('reset-project').addEventListener('click', () => {
   $('description').value = ''; $('custom-pose-name').value = ''; $('custom-pose-description').value = ''; $('reference-input').value = '';
   document.querySelector('input[name="style"][value="soft"]').checked = true;
   document.querySelector('input[name="count"][value="4"]').checked = true;
-  notice('chibi', ''); notice('pose', ''); renderReferences(); renderCandidates(); renderPoseOptions(); showStep(1, true);
+  notice('chibi', ''); notice('pose', ''); notice('trial', ''); notice('project', ''); renderReferences(); renderCandidates(); renderPoseOptions(); showStep(1, true);
 });
 const apiStatus = getGenerationStatus();
 $('api-label').textContent = apiStatus.label;
+petPreview = createPetPreview({
+  root: $('trial-panel'),
+  getData: () => ({ baseImage: state.base, poses: state.poses, persona: persona.draft }),
+  onSettingsChange: () => {},
+});
 renderPersonaPreview();
 renderReferences(); renderCandidates(); renderPoseOptions(); renderPoses();
