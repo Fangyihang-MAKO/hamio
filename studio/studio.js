@@ -5,6 +5,20 @@ import { parseProject, normalizeProject, normalizeDraft, PROJECT_MAX_BYTES } fro
 import { createDraftStore } from './drafts.js?v=workflow-1';
 
 const $ = (id) => document.getElementById(id);
+function createId(cryptoApi = globalThis.crypto) {
+  if (typeof cryptoApi?.randomUUID === 'function') return cryptoApi.randomUUID();
+  // Public HTTP origins omit randomUUID, but still expose getRandomValues.
+  // These local image/pose IDs must not depend on clocks or Math.random.
+  if (typeof cryptoApi?.getRandomValues !== 'function') {
+    throw new Error('浏览器不支持生成安全的图片标识，请使用较新的浏览器');
+  }
+  const bytes = new Uint8Array(16);
+  cryptoApi.getRandomValues(bytes);
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('');
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
 const TYPES = new Set(['image/png', 'image/jpeg', 'image/webp']);
 const EXAMPLES = [
@@ -151,7 +165,8 @@ function readImage(file) {
         if (!image.width || !image.height || image.width * image.height > 50000000) {
           reject(new Error('图片尺寸过大，请缩小后重新上传')); return;
         }
-        resolve({ id: crypto.randomUUID(), name: file.name, dataUrl: reader.result });
+        try { resolve({ id: createId(), name: file.name, dataUrl: reader.result }); }
+        catch (error) { reject(error); }
       };
       image.onerror = () => reject(new Error('图片无法打开，请换一张 PNG、JPG 或 WebP'));
       image.src = reader.result;
@@ -267,7 +282,7 @@ async function requestChibi() {
       count: Number(document.querySelector('input[name="count"]:checked').value),
     }, { signal: state.controller.signal });
     if (revision !== state.revision) return;
-    const results = safeResults(result).map((image, index) => ({ ...image, id: image.id || crypto.randomUUID(), name: `Q 版候选 ${index + 1}`, source: image.source === 'demo' ? 'demo' : 'generated' }));
+    const results = safeResults(result).map((image, index) => ({ ...image, id: image.id || createId(), name: `Q 版候选 ${index + 1}`, source: image.source === 'demo' ? 'demo' : 'generated' }));
     setCandidates(results);
     notice('chibi', `已收到 ${results.length} 张图片，请选择喜欢的形象`);
   } catch (error) {
@@ -802,7 +817,7 @@ $('add-pose').addEventListener('click', () => {
   if (!name) { notice('pose', '先给这个姿态起个名字吧', true); $('custom-pose-name').focus(); return; }
   if (state.definitions.some((pose) => pose.name === name)) { notice('pose', '已经有这个名字的姿态了，可以直接在上方勾选', true); return; }
   if (state.definitions.length >= 12) { notice('pose', '这一版最多设计 12 种姿态', true); return; }
-  const pose = { id: `custom-${crypto.randomUUID()}`, name, description: description || name };
+  const pose = { id: `custom-${createId()}`, name, description: description || name };
   state.definitions.push(pose); state.chosenPoses.add(pose.id);
   $('custom-pose-name').value = ''; $('custom-pose-description').value = '';
   renderPoseOptions(); renderPoses(); updateControls(); notice('pose', `已添加并选中“${name}”，可以添加参考、导入图片或准备生成要求`);
