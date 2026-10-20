@@ -228,9 +228,17 @@ function getPoseRequest(poses, revision) {
 async function asDataUrl(image) {
   if (image.dataUrl.startsWith('data:')) return image.dataUrl;
   if (!embeddedImages.has(image.dataUrl)) embeddedImages.set(image.dataUrl, (async () => {
-    const response = await fetch(new URL(image.dataUrl, window.location.href));
-    if (!response.ok) throw new Error('示例图片读取失败，请刷新后重试');
-    const blob = await response.blob();
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 30000);
+    let blob;
+    try {
+      const response = await fetch(new URL(image.dataUrl, window.location.href), { signal: controller.signal, cache: 'force-cache' });
+      if (!response.ok) throw new Error('示例图片读取失败，请点击「立即保存」重试');
+      blob = await response.blob();
+    } catch (error) {
+      if (controller.signal.aborted) throw new Error('示例图片读取超时，请检查网络后点击「立即保存」重试');
+      throw error;
+    } finally { clearTimeout(timeout); }
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => resolve(reader.result);
@@ -592,11 +600,13 @@ function projectSnapshot() {
 }
 async function embedProjectImages(snapshot) {
   const embed = async image => image ? { ...image, dataUrl: await asDataUrl(image) } : null;
-  snapshot.baseImage = await embed(snapshot.baseImage);
-  snapshot.references = await Promise.all(snapshot.references.map(embed));
-  snapshot.candidates = await Promise.all(snapshot.candidates.map(embed));
-  snapshot.poseDefinitions = await Promise.all(snapshot.poseDefinitions.map(async definition => ({ ...definition, referenceImage: await embed(definition.referenceImage) })));
-  snapshot.poses = await Promise.all(snapshot.poses.map(async pose => ({ ...pose, image: await embed(pose.image), history: await Promise.all((pose.history || []).map(embed)) })));
+  [snapshot.baseImage, snapshot.references, snapshot.candidates, snapshot.poseDefinitions, snapshot.poses] = await Promise.all([
+    embed(snapshot.baseImage),
+    Promise.all(snapshot.references.map(embed)),
+    Promise.all(snapshot.candidates.map(embed)),
+    Promise.all(snapshot.poseDefinitions.map(async definition => ({ ...definition, referenceImage: await embed(definition.referenceImage) }))),
+    Promise.all(snapshot.poses.map(async pose => ({ ...pose, image: await embed(pose.image), history: await Promise.all((pose.history || []).map(embed)) }))),
+  ]);
   return snapshot;
 }
 async function exportProject() {
