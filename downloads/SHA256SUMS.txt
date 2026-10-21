@@ -7,3 +7,5 @@ fd4f851c6a02bd2271ff93bc9a8f088a80708cf710b22d37a00e4a41134bb8c3  Ha-mio-Windows
 d678b884dffa8ca9c0798e663d78b10e15ac451d100ef806fa939fabacc06968  Ha-mio-Xuzhao-Windows-0.2.2.exe
 884e30f34226b529eaa12e555aebec52fd7745d0e400da5eb7af0192d303af7b  Ha-mio-Xuzhao-Android-0.2.2.apk
 5e2a3daef0dd80e1c1f252aa3ffb90d97a3c5341c8a44b1788cf4ea7ea06659a  Ha-mio-Xuzhao-Windows-0.2.3.exe
+2b6326a5d6b590d2fefa1e986f3ea9a42faa40804cf473536f3f4f24d447a097  Ha-mio-Xuzhao-Windows-0.3.0.exe
+4ab271ba5eff1d147adfcfd6953b2754fbf7bed3b3435354fb2cdd8fa3493c3d  Ha-mio-Xuzhao-Android-0.3.0.apk
