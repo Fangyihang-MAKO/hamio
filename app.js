@@ -100,7 +100,33 @@ petButton.addEventListener('click', () => {
     petSpeech.textContent = '我就在这里……偷偷陪着你呀';
   }, 5000);
 });
-document.querySelectorAll('.download').forEach(link => link.addEventListener('click', () => {
-  const status = document.getElementById(link.dataset.downloadStatus || 'download-status');
+document.querySelectorAll('a[download][href^="downloads/"]').forEach(link => link.addEventListener('click', () => {
+  const statusId = link.dataset.downloadStatus || 'download-status';
+  const status = document.getElementById(statusId);
   if (status) status.textContent = '已发起下载，请查看浏览器下载记录。微信内无法下载时，请在浏览器中打开';
+  const starPrompt = document.querySelector(`[data-star-prompt="${statusId}"]`);
+  if (starPrompt) starPrompt.hidden = false;
 }));
+
+const supportDialog = document.getElementById('support-dialog');
+const supportClose = supportDialog.querySelector('.support-close');
+let supportOpener = null;
+document.querySelectorAll('[data-open-support]').forEach(button => button.addEventListener('click', () => {
+  if (supportDialog.open) return;
+  supportOpener = button;
+  supportDialog.showModal();
+  document.body.classList.add('support-open');
+  supportClose.focus({preventScroll:true});
+}));
+supportClose.addEventListener('click', () => supportDialog.close());
+supportDialog.addEventListener('click', event => {
+  if (event.target !== supportDialog) return;
+  const bounds = supportDialog.getBoundingClientRect();
+  if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) supportDialog.close();
+});
+// Native dialog handles Escape and keeps keyboard focus inside the modal.
+supportDialog.addEventListener('close', () => {
+  document.body.classList.remove('support-open');
+  if (supportOpener?.isConnected) supportOpener.focus({preventScroll:true});
+  supportOpener = null;
+});
