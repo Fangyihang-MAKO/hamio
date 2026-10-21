@@ -7,8 +7,8 @@
   <meta name="description" content="Ha!mio 桌宠：流萤与虚照的 Android / Windows 版。摸头、喂食、探头陪伴与 AI 聊天。">
   <title>Ha!mio</title>
   <link rel="icon" href="favicon.ico">
-  <link rel="stylesheet" href="style.css?v=20261021">
-  <script src="app.js?v=20261021" defer></script>
+  <link rel="stylesheet" href="style.css?v=20261021-parity">
+  <script src="app.js?v=20261021-parity" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#downloads">跳到下载</a>
@@ -51,13 +51,15 @@
     </section>
 
     <section class="xuzhao-release wrap" id="xuzhao" aria-labelledby="xuzhao-title">
-      <div class="xuzhao-stage" aria-hidden="true">
-        <span class="xuzhao-star xuzhao-star-one">✦</span><span class="xuzhao-star xuzhao-star-two">✧</span>
-        <span class="xuzhao-stage-line">认真观察中……</span>
-        <img src="assets/xuzhao-idle.png" width="1199" height="1312" alt="" loading="lazy">
+      <div class="xuzhao-stage">
+        <span class="xuzhao-star xuzhao-star-one" aria-hidden="true">✦</span><span class="xuzhao-star xuzhao-star-two" aria-hidden="true">✧</span>
+        <p class="xuzhao-stage-line" id="xuzhao-speech" aria-live="polite">认真观察中……嗯，观察你</p>
+        <button type="button" class="pet-button xuzhao-pet-button" id="xuzhao-pet-button" aria-label="摸摸虚照的头，看看她的表情"><span class="pet-pose"><img id="xuzhao-pet-image" src="assets/xuzhao-idle.png" width="1199" height="1312" alt="戴着眼镜的虚照，故作正经地看着你" loading="lazy"><img class="pet-transition" id="xuzhao-pet-transition" src="assets/xuzhao-idle.png" width="1199" height="1312" alt="" aria-hidden="true" loading="lazy"></span></button>
+        <span class="pet-hint xuzhao-pet-hint">点点她，看看谁先露馅 <span aria-hidden="true">✦</span></span>
+        <button type="button" class="motion-toggle xuzhao-motion-toggle" id="xuzhao-motion-toggle" aria-pressed="false" hidden>开启晃动</button>
       </div>
       <div class="xuzhao-copy">
-        <p class="xuzhao-kicker">另一位屏幕边的伙伴 <span>Android / Windows · 0.2.2</span></p>
+        <p class="xuzhao-kicker">另一位屏幕边的伙伴 <span>Android · 0.2.2 / Windows · 0.2.3</span></p>
         <h2 id="xuzhao-title">虚照，认真陪你<br><span>偶尔也会露馅</span></h2>
         <p class="xuzhao-intro">深蓝紫的星空、白色四芒星与黑色波点，<br>把一点“假正经”的可爱带到桌面</p>
         <ul class="xuzhao-features">
@@ -73,8 +75,8 @@
             <p class="xuzhao-requirements">Android 8.0 及以上<br>首个安卓体验版 · 待真机反馈</p>
           </article>
           <article class="xuzhao-platform-card">
-            <h3>Windows <span>电脑版 · 0.2.2</span></h3>
-            <a class="button download xuzhao-download" href="downloads/Ha-mio-Xuzhao-Windows-0.2.2.exe" download data-download-status="xuzhao-download-status">下载虚照 Windows 版 <span>EXE · 17.4 MB</span></a>
+            <h3>Windows <span>电脑版 · 0.2.3</span></h3>
+            <a class="button download xuzhao-download" href="downloads/Ha-mio-Xuzhao-Windows-0.2.3.exe" download data-download-status="xuzhao-download-status">下载虚照 Windows 版 <span>EXE · 17.4 MB</span></a>
             <p class="xuzhao-requirements">Windows 10 / 11 · x64<br>.NET Framework 4.8</p>
           </article>
         </div>
