@@ -10,3 +10,5 @@ d678b884dffa8ca9c0798e663d78b10e15ac451d100ef806fa939fabacc06968  Ha-mio-Xuzhao-
 2b6326a5d6b590d2fefa1e986f3ea9a42faa40804cf473536f3f4f24d447a097  Ha-mio-Xuzhao-Windows-0.3.0.exe
 4ab271ba5eff1d147adfcfd6953b2754fbf7bed3b3435354fb2cdd8fa3493c3d  Ha-mio-Xuzhao-Android-0.3.0.apk
 cebcbc1d1656d351d68547eb2a4e6142f2a68002dc12a6e338b03a1f697234ae  Ha-mio-Xuzhao-Android-0.3.1.apk
+aff0e99db4068c1db3a26f1620422c29f08b7ff1a33340e8dac89afd4d1dcf52  Ha-mio-NIHILUX-Android-1.0.0.apk
+5bb8be039526a8223b989f13c5255f2ec77f840d2b076ab872c88369aa3043bd  Ha-mio-NIHILUX-Windows-1.0.0.exe
