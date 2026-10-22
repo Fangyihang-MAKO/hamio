@@ -16,3 +16,7 @@ ec6e7e2415220b4a6dce9a451053eae7eb75ab8aa4c792d4e51e214542fdd7a9  Ha-mio-NIHILUX
 8cd265f216aa5ed26f66e3381db4fec7ec116440b390f8c359431040ac180092  Ha-mio-NIHILUX-Windows-1.0.1.exe
 425576e7532bdae5690b660dd83ec5722af493b371d1d1eb13bbe250270b54d4  Ha-mio-NIHILUX-Android-1.0.2.apk
 87ff812d223a990adb685bbbef65db61f19ef929ff002121a82d5addb5090578  Ha-mio-NIHILUX-Windows-1.0.2.exe
+0031124db48de35a708eb2efadcb1a8fccfb706cf25c53e4cfd3d9c31fafc717  Ha-mio-Firefly-Windows-1.1.5.exe
+f43e3eb2c9c2bfc582927f7ccea7650c197ffe6c4574f04e517aa803794e66c9  Ha-mio-Firefly-Windows-1.1.5-portable.zip
+01b6d9d6258fa40d76ad075096ae2db011191a11a0c3a78260e454c466abbc0e  Ha-mio-NIHILUX-Android-1.0.3.apk
+9837be583b3c5b6bd18161d50250ddb96565b3ccfc75ab274cd9ffa074922662  Ha-mio-NIHILUX-Windows-1.0.3.exe
