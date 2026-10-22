@@ -64,7 +64,7 @@
 .star-prompt[hidden]{display:none}
 .star-prompt a{font-weight:600;color:#286858;text-decoration:underline;text-underline-offset:3px}
 .star-prompt small{flex-basis:100%;font-size:.75rem;color:#77745d}
-.footer-links{display:flex;gap:20px;align-items:center;font-size:.875rem}
+.footer-links{display:flex;flex-wrap:wrap;gap:20px;align-items:center;max-width:100%;font-size:.875rem}
 .xuzhao-downloads{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr));gap:12px}
 .xuzhao-platform-card{min-width:0;padding:15px;border:1px solid #8386a861;border-radius:16px;background:#ffffff08}
 .xuzhao-platform-card:only-child{max-width:340px}
@@ -72,8 +72,6 @@
 .xuzhao-platform-card h3 span{display:block;color:#c5bfdc;font-size:.75rem;font-weight:400}
 .xuzhao-platform-card .xuzhao-download{max-width:none;font-size:.875rem;padding:11px 8px}
 .xuzhao-platform-card .xuzhao-requirements{font-size:.6875rem;line-height:1.7;max-width:none}
-.xuzhao-support{margin-top:14px;background:#f2ddae;border-color:#f8e8c8;color:#42312a}
-.xuzhao-support:hover{background:#ffecc5}
 .xuzhao-star-prompt{background:#ddd6ff10;border-color:#a49bca70;color:#e3def6}
 .xuzhao-star-prompt a{color:#e6dcff}
 .xuzhao-star-prompt small{color:#bfb9d4}
@@ -91,4 +89,4 @@ body.support-open{overflow:hidden}
 .support-save:hover{background:#1e6355}
 .support-footnote{margin-top:10px;font-size:.75rem;line-height:1.7;color:#667d70;text-align:center}
 @media(max-width:850px){.site-header{flex-wrap:wrap}.site-header nav{flex:1;min-width:330px;gap:10px 16px}}
-@media(max-width:620px){.site-header nav{flex-basis:100%;min-width:0;justify-content:flex-start;gap:8px 16px}.site-header nav>a:first-child{display:inline}.support-nav{padding:7px 11px;min-height:36px;font-size:.8125rem}.footer-links{margin-left:auto;gap:16px}.xuzhao-platform-card:only-child{max-width:none}.support-dialog{padding:18px;border-radius:18px}.support-dialog h2{font-size:1.35rem}.community-actions{gap:10px 14px}.star-prompt{padding:11px 12px}}
+@media(max-width:620px){.site-header nav{flex-basis:100%;min-width:0;justify-content:flex-start;gap:8px 16px}.site-header nav>a:first-child{display:inline}.support-nav{padding:7px 11px;min-height:36px;font-size:.8125rem}.footer-links{order:4;flex-basis:100%;gap:12px}.xuzhao-platform-card:only-child{max-width:none}.support-dialog{padding:18px;border-radius:18px}.support-dialog h2{font-size:1.35rem}.community-actions{gap:10px 14px}.star-prompt{padding:11px 12px}}
